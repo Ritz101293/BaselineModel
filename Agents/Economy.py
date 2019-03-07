@@ -14,4 +14,5 @@ class Economy:
     def __init__(self, balance_sheet, tf_matrix, T, parameters):
         self.balance_sheet_agg = balance_sheet
         self.tf_matric_agg = tf_matrix
-        
+        self.T = T
+        self.param = parameters
