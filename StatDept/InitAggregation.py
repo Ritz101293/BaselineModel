@@ -125,9 +125,10 @@ def get_firm_cons_params(c_file, config):
     uc = fh.get_variable(c_file, config, 'firm_cons', 'cost')
     uvc = fh.get_variable(c_file, config, 'firm_cons', 'cost_variable')
     p = fh.get_variable(c_file, config, 'firm_cons', 'price')
+    inv = fh.get_variable(c_file, config, 'firm_cons', 'inventory')
 
     return [N, nu, rho, mu, sigma, gamma_1, gamma_2, chi_l, chi_k, chi_d,
-            chi_c, epsilon_k, epsilon_d, epsilon_c, uc, uvc, p]
+            chi_c, epsilon_k, epsilon_d, epsilon_c, uc, uvc, p, inv]
 
 
 def get_firm_cap_params(c_file, config):
