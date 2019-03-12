@@ -72,10 +72,10 @@ def get_tax_rate(c_file, config):
 
 
 def get_population_size(c_file, config):
-    size_h = fh.get_variable(c_file, config, 'model', 'total_household')
-    size_fc = fh.get_variable(c_file, config, 'model', 'total_firm_cons')
-    size_fk = fh.get_variable(c_file, config, 'model', 'total_firm_cap')
-    size_b = fh.get_variable(c_file, config, 'model', 'total_bank')
+    size_h = int(fh.get_variable(c_file, config, 'model', 'total_household'))
+    size_fc = int(fh.get_variable(c_file, config, 'model', 'total_firm_cons'))
+    size_fk = int(fh.get_variable(c_file, config, 'model', 'total_firm_cap'))
+    size_b = int(fh.get_variable(c_file, config, 'model', 'total_bank'))
 
     return [size_h, size_fc, size_fk, size_b]
 
@@ -91,8 +91,9 @@ def get_model_params(c_file, config):
     nu_0 = fh.get_variable(c_file, config, 'model', 'turnover_ratio')
     u = fh.get_variable(c_file, config, 'model', 'rate_capacity_util')
     l_k = fh.get_variable(c_file, config, 'model', 'capital_labor_ratio')
+    K = fh.get_variable(c_file, config, 'model', 'capital')
 
-    return [g_ss, u_bar, W, kappa, eta, lambda_e, mu_K, nu_0, u, l_k]
+    return [g_ss, u_bar, W, int(kappa), int(eta), lambda_e, mu_K, nu_0, u, l_k, K]
 
 
 def get_household_params(c_file, config):
@@ -104,7 +105,7 @@ def get_household_params(c_file, config):
     epsilon_c = fh.get_variable(c_file, config, 'household', 'choice_intensity_consumption')
     epsilon_d = fh.get_variable(c_file, config, 'household', 'choice_intensity_deposit')
 
-    return [alpha_1, alpha_2, v, chi_c, chi_d, epsilon_c, epsilon_d]
+    return [alpha_1, alpha_2, v, int(chi_c), int(chi_d), epsilon_c, epsilon_d]
 
 
 def get_firm_cons_params(c_file, config):
@@ -127,8 +128,8 @@ def get_firm_cons_params(c_file, config):
     p = fh.get_variable(c_file, config, 'firm_cons', 'price')
     inv = fh.get_variable(c_file, config, 'firm_cons', 'inventory')
 
-    return [N, nu, rho, mu, sigma, gamma_1, gamma_2, chi_l, chi_k, chi_d,
-            chi_c, epsilon_k, epsilon_d, epsilon_c, uc, uvc, p, inv]
+    return [int(N), nu, rho, mu, sigma, gamma_1, gamma_2, int(chi_l), int(chi_k), int(chi_d),
+            int(chi_c), epsilon_k, epsilon_d, epsilon_c, uc, uvc, p, inv]
 
 
 def get_firm_cap_params(c_file, config):
@@ -143,11 +144,12 @@ def get_firm_cap_params(c_file, config):
     epsilon_d = fh.get_variable(c_file, config, 'firm_cap', 'choice_intensity_deposit')
     epsilon_c = fh.get_variable(c_file, config, 'firm_cap', 'choice_intensity_credit')
     mu_N = fh.get_variable(c_file, config, 'firm_cap', 'productivity_labor')
-    uc = fh.get_variable(c_file, config, 'firm_cons', 'cost')
-    p = fh.get_variable(c_file, config, 'firm_cons', 'price')
+    uc = fh.get_variable(c_file, config, 'firm_cap', 'cost')
+    p = fh.get_variable(c_file, config, 'firm_cap', 'price')
+    inv = fh.get_variable(c_file, config, 'firm_cap', 'inventory')
 
-    return [N, nu, rho, mu, sigma, chi_l, chi_d, chi_c, epsilon_d,
-            epsilon_c, mu_N, uc, p]
+    return [int(N), nu, rho, mu, sigma, int(chi_l), int(chi_d), int(chi_c), epsilon_d,
+            epsilon_c, mu_N, uc, p, inv]
 
 
 def get_bank_params(c_file, config):
@@ -164,7 +166,7 @@ def get_govtcb_params(c_file, config):
     omega = fh.get_variable(c_file, config, 'govt', 'dole')
     pb = fh.get_variable(c_file, config, 'govt', 'price_bond')
 
-    return [N, omega, pb]
+    return [int(N), omega, pb]
 
 
 def initial_aggregation():
@@ -182,7 +184,7 @@ def initial_aggregation():
     balance_sheet[5, ] = get_reserve(c_file, config)
     balance_sheet[7, ] = np.sum(balance_sheet[0:6, ], axis = 0)
 
-    C = fh.get_variable(c_file, config, 'household', 'nominal_consumption')
+    C = fh.get_variable(c_file, config, 'household', 'real_consumption')
     INT = get_interest_rate(c_file, config)
     TAX = get_tax_rate(c_file, config)
     SIZE = get_population_size(c_file, config)
