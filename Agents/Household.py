@@ -19,7 +19,7 @@ class Household:
 
         # Information variables
         self.id_firm = 0
-        self.id_bank = 0
+        self.id_bank_d = 0
         self.w_bar = 0
         self.C_r = 0
         self.C_D = 0

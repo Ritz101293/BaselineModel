@@ -92,7 +92,6 @@ class Economy:
         self.create_credit_network(network[4])
         self.create_capital_network(network[5])
         print("Network created in %f seconds" % (time.time()-st))
-        return 0
 
     def create_labor_network(self, N1, N2, N3):
         for n1 in range(len(N1)):
@@ -107,7 +106,7 @@ class Economy:
             for h1 in N2[n2]:
                 f.id_workers.add(h1)
                 h = self.getObjectById(h1)
-                h.id_firm = 10000 + n1
+                h.id_firm = 10000 + n2
 
         for n3 in N3:
             self.govt.id_workers.add(n3)
@@ -117,7 +116,7 @@ class Economy:
     def create_deposit_network(self, BD):
         for i in range(len(BD)):
             b = self.getObjectById(30000 + i)
-            for d in range(len(BD[i])):
+            for d in BD[i]:
                 b.id_depositors.add(d)
                 dp = self.getObjectById(d)
                 dp.id_bank_d = 30000 + i
@@ -125,7 +124,7 @@ class Economy:
     def create_credit_network(self, BC):
         for i in range(len(BC)):
             b = self.getObjectById(30000 + i)
-            for d in range(len(BC[i])):
+            for d in BC[i]:
                 b.id_debtors.add(d)
                 ln = self.getObjectById(d)
                 ln.id_bank_l = dq([30000 + i]*20, maxlen=20)
@@ -133,7 +132,7 @@ class Economy:
     def create_capital_network(self, KC):
         for i in range(len(KC)):
             fk = self.getObjectById(20000 + i)
-            for k in range(len(KC[i])):
+            for k in KC[i]:
                 fk.id_firm_cons.add(k)
                 fc = self.getObjectById(k)
                 fc.id_firm_cap = dq([20000 + i]*20, maxlen=20)
