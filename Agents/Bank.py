@@ -20,14 +20,17 @@ class Bank:
         # Information variables
         self.i_D = dq([INT[0], INT[0]], maxlen=2)
         self.i_L = dq([INT[1], INT[1]], maxlen=2)
-        self.id_depositors = dq([])
-        self.id_debtors = dq([])
+        self.id_depositors = set()
+        self.id_debtors = set()
+        self.LR = 0
+        self.CR = 0
 
         # Balance Sheet variables
         self.D = D
         self.L = L
         self.B = B
         self.R = R
+        self.A = 0
 
         # Transaction variables
         self.T = 0

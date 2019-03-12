@@ -43,6 +43,7 @@ for mc in range(MC):
     E = econ.Economy(balance_sheet[:, :, 0, mc], tf_matrix[:, :, 0, mc],
                      T, params, network)
     E.populate()
+    E.create_network(network)
     for t in range(T + 1):
         print(t)
 

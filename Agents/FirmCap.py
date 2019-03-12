@@ -24,7 +24,8 @@ class FirmCap:
         self.MU = dq([FK[3], FK[3]], maxlen=2)
         self.OCF = dq([], maxlen=2)
         self.S = dq([], maxlen=2)
-        self.id_workers = dq([])
+        self.id_workers = set()
+        self.id_firm_cons = set()
         self.PI = 0
         self.Pk = 0
         self.id_bank_d = 0
@@ -59,6 +60,6 @@ class FirmCap:
         self.epsilon_c = FK[9]
 
         # Expectation variables
-        self.exp_S = 0
+        self.exp_S = dq([], maxlen=2)
         self.exp_W = 0
         self.exp_OCF = 0

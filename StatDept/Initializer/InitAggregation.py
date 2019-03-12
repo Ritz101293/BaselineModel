@@ -6,8 +6,10 @@ Created on Thu Mar  7 09:37:01 2019
 @author: riteshkakade
 """
 
-import numpy as np
 
+import time
+
+import numpy as np
 
 from Utils import FileHandling as fh
 
@@ -170,6 +172,7 @@ def get_govtcb_params(c_file, config):
 
 
 def initial_aggregation():
+    # st = time.time()
     balance_sheet = np.zeros((8, 7))
     tf_matrix = np.zeros((19, 11))
 
@@ -194,6 +197,6 @@ def initial_aggregation():
     FK = get_firm_cap_params(c_file, config)
     BANK = get_bank_params(c_file, config)
     GCB = get_govtcb_params(c_file, config)
-
+    # print("Initial aggregation took %f seconds" % (time.time()-st))
     return (balance_sheet, tf_matrix, [C, INT, TAX, SIZE, MODEL,
             HH, FC, FK, BANK, GCB])

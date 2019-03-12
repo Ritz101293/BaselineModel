@@ -25,7 +25,9 @@ class FirmCons:
         self.MU = dq([FC[3], FC[3]], maxlen=2)
         self.OCF = dq([], maxlen=2)
         self.S = dq([], maxlen=2)
-        self.id_workers = dq([])
+        self.r = dq([], maxlen=2)
+        self.id_workers = set()
+        self.id_firm_cap = dq([], maxlen=20)
         self.PI = 0
         self.Pc = 0
         self.id_bank_d = 0
@@ -69,6 +71,6 @@ class FirmCons:
         self.epsilon_k = FC[13]
 
         # Expectation variables
-        self.exp_S = 0
+        self.exp_S = dq([], maxlen=2)
         self.exp_W = 0
         self.exp_OCF = 0

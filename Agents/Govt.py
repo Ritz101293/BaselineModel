@@ -17,6 +17,7 @@ class Govt:
         self.Pb = GCB[2]
         self.tau_h = TAX[0]
         self.tau_c = TAX[1]
+        self.id_workers = set()
 
         # Balance sheet variables
         self.B = B
