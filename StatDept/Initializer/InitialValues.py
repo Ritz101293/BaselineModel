@@ -7,8 +7,19 @@ Created on Mon Mar  4 14:04:57 2019
 """
 
 
+import Utils.Utils as ut
+
+
 def get_capital_batches(Pk, K, kappa, g_ss):
     return [((Pk*K*(kappa - i))/((kappa**2)*((1 + g_ss)**i))) for i in range(kappa)]
+
+
+def get_cap_amort(Pk, K, kappa, g_ss):
+    return (Pk*K*ut.summation(1/(1+g_ss)))/(kappa**2)
+
+
+def get_principal_loan_payments(L0, eta, g_ss):
+    return (L0*ut.summation(1/(1 + g_ss)))/eta
 
 
 def get_loan(L, eta, g_ss):

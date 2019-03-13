@@ -37,51 +37,75 @@ class Economy:
 
     def populate(self):
         st = time.time()
-        g_ss = self.param[4][0]
+        MODEL = self.param[4]
+        g_ss = MODEL[0]
+        kappa = MODEL[3]
+        eta = MODEL[4]
+
+        C_r = self.param[0]
+        TAX = self.param[2]
+        INT = self.param[1]
+        HH = self.param[5]
+        FC = self.param[6]
+        FK = self.param[7]
+        BANK = self.param[8]
+        GCB = self.param[9]
+
         size_h = self.param[3][0]
         size_fc = self.param[3][1]
         size_fk = self.param[3][2]
         size_b = self.param[3][3]
 
+        Pc = FC[16]
+        Pk = FK[12]
+        K = MODEL[10]/size_fc
+
         Dh = self.balance_sheet_agg[0][0]/size_h
+        HH.append(FC[20] + FK[17] + BANK[4])
 
         Dfc = self.balance_sheet_agg[0][1]/size_fc
-        Lc = iv.get_loan(abs(self.balance_sheet_agg[1][1]/size_fc),
-                         self.param[4][4], g_ss)
-        Kc = iv.get_capital_batches(self.param[7][12],
-                                    self.param[4][10]/size_fc,
-                                    self.param[4][3], self.param[4][0])
+
+        Lc = iv.get_loan(abs(self.balance_sheet_agg[1][1]/size_fc), eta, g_ss)
+        Kc = iv.get_capital_batches(Pk, K, kappa, g_ss)
+        cap_amort = iv.get_cap_amort(Pk, K, kappa, g_ss)
+        prin_payments_c = iv.get_principal_loan_payments(Lc[0]*size_fc, eta, g_ss)
+        FC.append(cap_amort*size_fc)
+        FC.append(FC[18] - FC[19] + FC[21] - (FC[17]*FC[14]*g_ss/(1 + g_ss)) - prin_payments_c)
 
         Dfk = self.balance_sheet_agg[0][2]/size_fk
-        Lk = iv.get_loan(abs(self.balance_sheet_agg[1][2]/size_fk),
-                         self.param[4][4], g_ss)
+        Lk = iv.get_loan(abs(self.balance_sheet_agg[1][2]/size_fk), eta, g_ss)
+        prin_payments_k = iv.get_principal_loan_payments(Lk[0]*size_fk, eta, g_ss)
+        FK.append(FK[15] - FK[16] - (FC[13]*FC[11]*g_ss/(1 + g_ss)) - prin_payments_k)
 
         Db = abs(self.balance_sheet_agg[0][3]/size_b)
-        Lb = self.balance_sheet_agg[1][3]/size_b
-        Bb = self.balance_sheet_agg[4][3]/size_b
-        Rb = self.balance_sheet_agg[5][3]/size_b
+        Lb = abs(self.balance_sheet_agg[1][3]/size_b)
+        Bb = abs(self.balance_sheet_agg[4][3]/size_b)
+        Rb = abs(self.balance_sheet_agg[5][3]/size_b)
 
         for i in range(size_h):
-            household = hh(Dh, self.param[5], self.param[4], i)
+            household = hh(Dh, HH, C_r/size_h, Pc, MODEL, INT, size_h, i)
             self.households[i] = household
 
         for i in range(size_fc):
-            firm_cons = fc(Dfc, Lc, self.param[0], Kc, self.param[6], i)
+            firm_cons = fc(Dfc, Lc, C_r/size_fc, Kc, FC, MODEL, Pk, FK[14], 
+                           INT, size_fc, i)
             self.firms_cons[10000 + i] = firm_cons
 
         for i in range(size_fk):
-            firm_cap = fk(Dfk, Lk, 0, self.param[7], i)
+            firm_cap = fk(Dfk, Lk, FK, MODEL, INT, size_fk, i)
             self.firms_cap[20000 + i] = firm_cap
 
         for i in range(size_b):
-            bank = b(Db, Lb, Bb, Rb, self.param[8], self.param[1], i)
+            bank = b(Db, Lb, Bb, Rb, BANK, INT, MODEL, TAX[1], size_b, i)
             self.banks[30000 + i] = bank
 
-        self.govt = gov(self.balance_sheet_agg[4][4], self.param[9],
-                        self.param[2])
-        self.central_bank = cb(self.balance_sheet_agg[4][5],
-                               self.balance_sheet_agg[5][5],
-                               self.param[9], self.param[1])
+        UN = int(size_h - (FC[0] + FK[0] + GCB[0]))
+        GCB.append(UN)
+        GCB.append(HH[7] + FC[19] + FK[16] + (self.banks[30000].T)*size_b)
+
+        self.govt = gov(abs(self.balance_sheet_agg[4][4]), GCB, TAX, MODEL, INT)
+        self.central_bank = cb(abs(self.balance_sheet_agg[4][5]),
+                               abs(self.balance_sheet_agg[5][5]), GCB, INT, MODEL)
 
         print("Population created in %f seconds" % (time.time()-st))
 
@@ -91,6 +115,17 @@ class Economy:
         self.create_deposit_network(network[3])
         self.create_credit_network(network[4])
         self.create_capital_network(network[5])
+
+        omega = self.govt.omega
+        tau = self.govt.tau_h
+        g_ss = self.param[4][0]
+        for h in self.households.values():
+            if h.u_h > 0:
+                h.dole = omega*h.w_bar
+                h.T = tau*(h.int_D + h.div)/(1 + g_ss)
+            else:
+                h.T = tau*(h.w + ((h.int_D + h.div)/(1 + g_ss)))
+
         print("Network created in %f seconds" % (time.time()-st))
 
     def create_labor_network(self, N1, N2, N3):
@@ -100,6 +135,8 @@ class Economy:
                 f.id_workers.add(h1)
                 h = self.getObjectById(h1)
                 h.id_firm = 10000 + n1
+                h.w = self.param[4][2]
+                h.u_h = 0
 
         for n2 in range(len(N2)):
             f = self.getObjectById(20000 + n2)
@@ -107,11 +144,15 @@ class Economy:
                 f.id_workers.add(h1)
                 h = self.getObjectById(h1)
                 h.id_firm = 10000 + n2
+                h.w = self.param[4][2]
+                h.u_h = 0
 
         for n3 in N3:
             self.govt.id_workers.add(n3)
             h = self.getObjectById(n3)
             h.id_firm = -1
+            h.w = self.param[4][2]
+            h.u_h = 0
 
     def create_deposit_network(self, BD):
         for i in range(len(BD)):
@@ -152,3 +193,9 @@ class Economy:
         else:
             print("Enter the valid flag: 0, 1, 2 or 3")
             return None
+
+    def get_aggregate_bal_sheet(self):
+        return 0
+
+    def get_aggregate_tf_matrix(self):
+        return 0

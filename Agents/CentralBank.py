@@ -12,7 +12,7 @@ from collections import deque as dq
 
 class CentralBank:
 
-    def __init__(self, B, R, GCB, INT):
+    def __init__(self, B, R, GCB, INT, MODEL):
         # Information variables
         self.i_A = INT[3]
 
@@ -21,11 +21,11 @@ class CentralBank:
         self.R = R
 
         # Transaction variables
-        self.int_B = 0
-        self.PI_cb = 0
-        self.del_R = 0
-        self.del_B = 0
+        self.int_B = B*INT[2]/(1 + MODEL[0])
+        self.PI_cb = GCB[3]
+        self.del_R = R*MODEL[0]/(1 + MODEL[0])
+        self.del_B = B*MODEL[0]/(1 + MODEL[0])
 
         # Parameters
-        self.CR = 0
-        self.LR = 0
+        self.CR = 0.06
+        self.LR = 0.08

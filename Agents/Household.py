@@ -12,7 +12,7 @@ from collections import deque as dq
 
 class Household:
 
-    def __init__(self, D, HH, MODEL, hid):
+    def __init__(self, D, HH, C_r, Pc, MODEL, INT, size_h, hid):
         # Identity variable
         self.id = 0 + hid
         self.id_h = hid
@@ -20,23 +20,24 @@ class Household:
         # Information variables
         self.id_firm = 0
         self.id_bank_d = 0
-        self.w_bar = 0
-        self.C_r = 0
-        self.C_D = 0
-        self.u_h = 0
-        self.w_prev = 0
+        self.w_bar = MODEL[2]
+        self.C_r = C_r
+        self.C_D = C_r
+        self.u_h = 1
+        self.w_prev = MODEL[2]
+        self.u_bar = MODEL[1]
 
         # Balance sheet variables
         self.D = dq([D, D], maxlen=2)
 
         # Transaction Matrix variables
-        self.C_n = 0
+        self.C_n = C_r*Pc
         self.w = 0
         self.dole = 0
         self.T = 0
-        self.int_D = 0
-        self.div = 0
-        self.del_D = 0
+        self.int_D = D*INT[0]/(1 + MODEL[0])
+        self.div = HH[8]/size_h
+        self.del_D = D*MODEL[0]/(1 + MODEL[0])
 
         # Parameters
         self.lambda_e = MODEL[5]
@@ -49,4 +50,4 @@ class Household:
         self.epsilon_d = HH[6]
 
         # Expectation variables
-        self.exp_Pc = 0
+        self.exp_Pc = dq([Pc, Pc], maxlen=2)

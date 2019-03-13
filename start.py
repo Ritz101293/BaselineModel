@@ -44,7 +44,10 @@ for mc in range(MC):
                      T, params, network)
     E.populate()
     E.create_network(network)
-    for t in range(T + 1):
+    for t in range(1, T + 1):
+        balance_sheet[:, :, t, mc] = E.get_aggregate_bal_sheet()
+        # DO some stuff!!!
+        tf_matrix[:, :, t, mc] = E.get_aggregate_tf_matrix()
         print(t)
 
 print("total time elapsed: %f seconds" % (time.time() - start_time))

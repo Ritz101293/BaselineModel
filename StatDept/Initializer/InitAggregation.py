@@ -106,8 +106,9 @@ def get_household_params(c_file, config):
     chi_d = fh.get_variable(c_file, config, 'household', 'partner_deposit')
     epsilon_c = fh.get_variable(c_file, config, 'household', 'choice_intensity_consumption')
     epsilon_d = fh.get_variable(c_file, config, 'household', 'choice_intensity_deposit')
+    Th = fh.get_variable(c_file, config, 'household', 'tax')
 
-    return [alpha_1, alpha_2, v, int(chi_c), int(chi_d), epsilon_c, epsilon_d]
+    return [alpha_1, alpha_2, v, int(chi_c), int(chi_d), epsilon_c, epsilon_d, Th]
 
 
 def get_firm_cons_params(c_file, config):
@@ -129,9 +130,12 @@ def get_firm_cons_params(c_file, config):
     uvc = fh.get_variable(c_file, config, 'firm_cons', 'cost_variable')
     p = fh.get_variable(c_file, config, 'firm_cons', 'price')
     inv = fh.get_variable(c_file, config, 'firm_cons', 'inventory')
+    PI_c = fh.get_variable(c_file, config, 'firm_cons', 'profit')
+    T_c = fh.get_variable(c_file, config, 'firm_cons', 'tax')
+    Div_c = fh.get_variable(c_file, config, 'firm_cons', 'dividend')
 
     return [int(N), nu, rho, mu, sigma, gamma_1, gamma_2, int(chi_l), int(chi_k), int(chi_d),
-            int(chi_c), epsilon_k, epsilon_d, epsilon_c, uc, uvc, p, inv]
+            int(chi_c), epsilon_k, epsilon_d, epsilon_c, uc, uvc, p, inv, PI_c, T_c, Div_c]
 
 
 def get_firm_cap_params(c_file, config):
@@ -149,26 +153,32 @@ def get_firm_cap_params(c_file, config):
     uc = fh.get_variable(c_file, config, 'firm_cap', 'cost')
     p = fh.get_variable(c_file, config, 'firm_cap', 'price')
     inv = fh.get_variable(c_file, config, 'firm_cap', 'inventory')
+    Y = fh.get_variable(c_file, config, 'firm_cap', 'output')
+    PI_k = fh.get_variable(c_file, config, 'firm_cap', 'profit')
+    T_k = fh.get_variable(c_file, config, 'firm_cap', 'tax')
+    Div_k = fh.get_variable(c_file, config, 'firm_cap', 'dividend')
 
     return [int(N), nu, rho, mu, sigma, int(chi_l), int(chi_d), int(chi_c), epsilon_d,
-            epsilon_c, mu_N, uc, p, inv]
+            epsilon_c, mu_N, uc, p, inv, Y, PI_k, T_k, Div_k]
 
 
 def get_bank_params(c_file, config):
-    sigma = fh.get_variable(c_file, config, 'bank', 'share_dividend')
+    rho = fh.get_variable(c_file, config, 'bank', 'share_dividend')
     zeta_c = fh.get_variable(c_file, config, 'bank', 'risk_aversion_firm_cons')
     zeta_k = fh.get_variable(c_file, config, 'bank', 'risk_aversion_firm_cap')
     beta = fh.get_variable(c_file, config, 'bank', 'networth_asset_ratio')
+    Div = fh.get_variable(c_file, config, 'bank', 'dividend')
 
-    return [sigma, zeta_c, zeta_k, beta]
+    return [rho, zeta_c, zeta_k, beta, Div]
 
 
 def get_govtcb_params(c_file, config):
     N = fh.get_variable(c_file, config, 'govt', 'worker')
     omega = fh.get_variable(c_file, config, 'govt', 'dole')
     pb = fh.get_variable(c_file, config, 'govt', 'price_bond')
+    PI_cb = fh.get_variable(c_file, config, 'central_bank', 'profit')
 
-    return [int(N), omega, pb]
+    return [int(N), omega, pb, PI_cb]
 
 
 def initial_aggregation():
