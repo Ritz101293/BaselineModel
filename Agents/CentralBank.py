@@ -43,11 +43,7 @@ class CentralBank:
     def get_net_worth(self):
         return self.B - self.R + self.A
 
-    def get_balance_sheet(self, isT0):
-        if isT0:
-            self.B = self.B + self.del_B
-            self.R = self.R + self.del_R
-            self.A = self.A + self.del_A
+    def get_balance_sheet(self):
         return np.array([0, 0, 0, 0, self.B, -self.R, self.A,
                          self.get_net_worth()])
 

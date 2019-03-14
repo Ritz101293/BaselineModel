@@ -44,6 +44,7 @@ for mc in range(MC):
                      T, params, network)
     E.populate()
     E.create_network(network)
+    tf_matrix[:, :, 0, mc] = E.get_aggregate_tf_matrix()
     for t in range(1, T + 1):
         balance_sheet[:, :, t, mc] = E.get_aggregate_bal_sheet()
         # DO some stuff!!!

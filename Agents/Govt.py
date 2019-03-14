@@ -43,9 +43,7 @@ class Govt:
     def get_net_worth(self):
         return -self.B
 
-    def get_balance_sheet(self, isT0):
-        if isT0:
-            self.B = self.B + self.del_B
+    def get_balance_sheet(self):
         return np.array([0, 0, 0, 0, -self.B, 0, 0, self.get_net_worth()])
 
     def get_tf_matrix(self):

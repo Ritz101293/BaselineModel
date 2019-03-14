@@ -205,9 +205,9 @@ class Economy:
         return [self.households, self.firms_cons, self.firms_cap,
                 self.banks, self.govt, self.central_bank]
 
-    def get_aggregate_bal_sheet(self, isT0=False):
+    def get_aggregate_bal_sheet(self):
         agents_dict = self.get_agents_dict()
-        self.balance_sheet_agg = so_agg.get_balance_sheet(agents_dict, isT0)
+        self.balance_sheet_agg = so_agg.get_balance_sheet(agents_dict)
         return self.balance_sheet_agg
 
     def form_expectation(self):

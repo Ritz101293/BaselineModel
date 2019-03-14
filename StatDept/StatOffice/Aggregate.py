@@ -40,24 +40,24 @@ def get_tf_matrix(agents):
     return tf
 
 
-def get_balance_sheet(agents, isT0):
+def get_balance_sheet(agents):
     bs = np.zeros((8, 7))
 
     for h in agents[0].values():
-        bs[:, 0] = bs[:, 0] + h.get_balance_sheet(isT0)
+        bs[:, 0] = bs[:, 0] + h.get_balance_sheet()
 
     for f_c in agents[1].values():
-        bs[:, 1] = bs[:, 1] + f_c.get_balance_sheet(isT0)
+        bs[:, 1] = bs[:, 1] + f_c.get_balance_sheet()
 
     for f_k in agents[2].values():
-        bs[:, 2] = bs[:, 2] + f_k.get_balance_sheet(isT0)
+        bs[:, 2] = bs[:, 2] + f_k.get_balance_sheet()
 
     for bk in agents[3].values():
-        bs[:, 3] = bs[:, 3] + bk.get_balance_sheet(isT0)
+        bs[:, 3] = bs[:, 3] + bk.get_balance_sheet()
 
-    bs[:, 4] = bs[:, 4] + agents[4].get_balance_sheet(isT0)
+    bs[:, 4] = bs[:, 4] + agents[4].get_balance_sheet()
 
-    bs[:, 5] = bs[:, 5] + agents[5].get_balance_sheet(isT0)
+    bs[:, 5] = bs[:, 5] + agents[5].get_balance_sheet()
 
     bs[:, 6] = np.sum(bs[:, 0:5], axis=1)
 

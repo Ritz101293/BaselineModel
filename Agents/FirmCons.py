@@ -103,11 +103,7 @@ class FirmCons:
     def get_net_worth(self):
         return self.D - np.sum(self.L) + self.C + np.sum(self.K)
 
-    def get_balance_sheet(self, isT0):
-        if isT0:
-            self.prev_D = self.D
-            self.D = self.D + self.del_D
-            self.L = self.L + self.del_L
+    def get_balance_sheet(self):
         return np.array([self.D, -np.sum(self.L), self.C, np.sum(self.K),
                          0, 0, 0, self.get_net_worth()])
 

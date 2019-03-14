@@ -65,10 +65,7 @@ class Household:
     def get_net_worth(self):
         return self.D
 
-    def get_balance_sheet(self, isT0):
-        if isT0:
-            self.prev_D = self.D
-            self.D = self.D + self.del_D
+    def get_balance_sheet(self):
         return np.array([self.D, 0, 0, 0, 0, 0, 0, self.get_net_worth()])
 
     def get_tf_matrix(self):

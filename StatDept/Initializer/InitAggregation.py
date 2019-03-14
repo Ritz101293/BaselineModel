@@ -184,7 +184,7 @@ def get_govtcb_params(c_file, config):
 def initial_aggregation():
     # st = time.time()
     balance_sheet = np.zeros((8, 7))
-    tf_matrix = np.zeros((19, 11))
+    tf_matrix = np.zeros((18, 10))
 
     c_file = fh.read_file('config_final.ini')
     config = fh.read_config(c_file)
