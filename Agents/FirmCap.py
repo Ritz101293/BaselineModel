@@ -35,7 +35,7 @@ class FirmCap:
         self.Y_r = FK[14]/size_fk
         self.L_r = np.array([L[0]]*eta)
         self.S = FK[14]/size_fk
-        self.inv = np.array([FK[13], FK[13]])
+        self.inv = np.array([FK[13]/size_fk, FK[13]/size_fk])
         # 5) Information variables
         self.mu_N = FK[10]
         # 6) Price, Interest variables
@@ -62,6 +62,7 @@ class FirmCap:
         self.del_L = np.sum(L)*MODEL[0]/(1 + MODEL[0])
 
         # Parameters
+        self.lambda_e = MODEL[5]
         self.nu = FK[1]
         self.rho = FK[2]
         self.sigma = FK[4]
@@ -73,7 +74,6 @@ class FirmCap:
 
         # Expectation variables
         self.exp_S = FK[14]/size_fk
-        self.exp_W = MODEL[2]*FK[0]/size_fk
         self.exp_OCF = FK[18]/size_fk
         self.exp_div = (FK[15] - FK[16])*FK[2]/size_fk
 
@@ -96,7 +96,6 @@ class FirmCap:
 
     def form_expectations(self):
         self.exp_S = self.exp_S + self.lambda_e*(self.S - self.exp_S)
-        self.exp_W = self.exp_W + self.lambda_e*(self.W - self.exp_W)
         self.exp_OCF = self.exp_OCF + self.lambda_e*(self.OCF - self.exp_OCF)
         self.exp_div = self.exp_div + self.lambda_e*(self.div - self.exp_div)
 
@@ -104,11 +103,12 @@ class FirmCap:
         self.Y_D = self.exp_S*(1 + self.nu) - self.inv[0]
 
     def calc_labor_demand(self):
-        self.N_D = self.Y_D/self.mu_N
+        self.N_D = self.Y_D//self.mu_N
 
     def calc_markup(self):
         fn = FN.rvs(0, loc=0, scale=0.0094)
         self.MU = self.MU*(1 - fn) if (self.inv[0]/self.S > self.nu) else self.MU*(1 + fn)
 
-    def set_price(self):
-        self.Pc = (1 + self.MU)*self.exp_W*self.N_D/self.Y_D
+    def set_price(self, exp_wbar):
+        self.calc_markup()
+        self.Pk = (1 + self.MU)*exp_wbar*self.N_D/self.Y_D

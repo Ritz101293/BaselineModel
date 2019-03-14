@@ -50,7 +50,7 @@ class CentralBank:
     def get_tf_matrix(self):
         tf = np.zeros((18, 2))
         tf[:, 0] = [0, 0, 0, 0, 0, 0, 0, 0, self.int_B, 0, self.int_A, 0,
-                    self.PI_cb, 0, 0, 0, 0, 0]
+                    -self.PI_cb, 0, 0, 0, 0, 0]
         tf[:, 1] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     -self.del_A, self.del_R, -self.del_B, 0]
         return tf

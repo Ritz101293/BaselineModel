@@ -77,6 +77,7 @@ class FirmCons:
         self.del_L = np.sum(L)*MODEL[0]/(1 + MODEL[0])
 
         # Parameters
+        self.lambda_e = MODEL[5]
         self.nu = FC[1]
         self.rho = FC[2]
         self.sigma = FC[4]
@@ -95,7 +96,6 @@ class FirmCons:
 
         # Expectation variables
         self.exp_S = C
-        self.exp_W = MODEL[2]*FC[0]/size_fc
         self.exp_OCF = FC[22]/size_fc
         self.exp_div = (FC[18] - FC[19])*FC[2]/size_fc
 
@@ -119,7 +119,6 @@ class FirmCons:
 
     def form_expectations(self):
         self.exp_S = self.exp_S + self.lambda_e*(self.S - self.exp_S)
-        self.exp_W = self.exp_W + self.lambda_e*(self.W - self.exp_W)
         self.exp_OCF = self.exp_OCF + self.lambda_e*(self.OCF - self.exp_OCF)
         self.exp_div = self.exp_div + self.lambda_e*(self.div - self.exp_div)
 
@@ -131,15 +130,15 @@ class FirmCons:
         return self.u_D
 
     def calc_labor_demand(self):
-        self.N_D = self.get_desired_cap_util()*np.sum(self.K_r)/self.l_k
+        self.N_D = self.get_desired_cap_util()*np.sum(self.K_r)//self.l_k
 
     def calc_markup(self):
         fn = FN.rvs(0, loc=0, scale=0.0094)
         self.MU = self.MU*(1 - fn) if (self.inv[0]/self.S > self.nu) else self.MU*(1 + fn)
 
-    def set_price(self):
+    def set_price(self, exp_wbar):
         self.calc_markup()
-        self.Pc = (1 + self.MU)*self.exp_W*self.N_D/self.Y_D
+        self.Pc = (1 + self.MU)*exp_wbar*self.N_D/self.Y_D
 
     def get_productive_cap_growth(self):
         return (self.gamma_1*(self.r - self.r_bar)/self.r_bar) + (self.gamma_2*(self.u_D - self.u_bar)/self.u_bar)

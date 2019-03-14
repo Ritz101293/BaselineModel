@@ -29,26 +29,34 @@ tf_matrix = np.zeros((18, 10, T + 1, MC))
 
 st = time.time()
 bs, tf, params = cb.calibrateModel()
-print("Model calibrated in %f seconds" % (time.time()-st))
 
-st = time.time()
 network = nw.get_initialized_network()
-print("Network initialized in %f seconds" % (time.time()-st))
 
+E = econ.Economy(bs, tf, T, params, network)
+E.populate()
+E.create_network(network)
+print("T0 of the model is %f seconds" % (time.time()-st))
 
 for mc in range(MC):
+    st_mc = time.time()
     balance_sheet[:, :, 0, mc] = bs
-    tf_matrix[:, :, 0, mc] = tf
-
-    E = econ.Economy(balance_sheet[:, :, 0, mc], tf_matrix[:, :, 0, mc],
-                     T, params, network)
-    E.populate()
-    E.create_network(network)
     tf_matrix[:, :, 0, mc] = E.get_aggregate_tf_matrix()
+
     for t in range(1, T + 1):
+        st_t = time.time()
+        E.calc_prev_statistics()
         balance_sheet[:, :, t, mc] = E.get_aggregate_bal_sheet()
+        E.form_expectation()
+        E.production_labor_prices()
+        # st = time.time()
+        E.household_revise_wages()
+        # print("wage revision took %f seconds" % (time.time()-st))
+        E.set_interest_rates()
+        E.calc_investment_demand()
+        E.select_capital_supplier()
         # DO some stuff!!!
         # tf_matrix[:, :, t, mc] = E.get_aggregate_tf_matrix()
-        print(t)
+        print("\t T = %d finished in %f seconds" % (t, time.time()-st_t))
+    print("MC no %d completed in %f seconds" % (mc, time.time()-st_mc))
 
 print("total time elapsed: %f seconds" % (time.time() - start_time))

@@ -18,6 +18,7 @@ from Agents.FirmCap import FirmCap as fk
 from Agents.Bank import Bank as b
 from Agents.Govt import Govt as gov
 from Agents.CentralBank import CentralBank as cb
+from Institutions import CapitalGoodsMarket as cgmkt
 from StatDept.Initializer import InitialValues as iv
 from StatDept.StatOffice import Aggregate as so_agg
 
@@ -37,11 +38,15 @@ class Economy:
         self.central_bank = None
 
         self.u_n = parameters[4][1]
+        self.w_bar = parameters[4][2]
         self.i_lbar = parameters[1][1]
         self.i_dbar = parameters[1][0]
 
+        self.lambda_e = parameters[4][5]
+
+        self.exp_wbar = parameters[4][2]
+
     def populate(self):
-        st = time.time()
         MODEL = self.param[4]
         g_ss = MODEL[0]
         kappa = MODEL[3]
@@ -114,10 +119,7 @@ class Economy:
                                abs(self.balance_sheet_agg[5][5]),
                                GCB, INT, MODEL)
 
-        print("Population created in %f seconds" % (time.time()-st))
-
     def create_network(self, network):
-        st = time.time()
         self.create_labor_network(network[0], network[1], network[2])
         self.create_deposit_network(network[3])
         self.create_credit_network(network[4])
@@ -134,8 +136,6 @@ class Economy:
             else:
                 h.T = tau*(h.w + (h.int_D + h.div)/g)
                 h.NI = h.w + (h.int_D + h.div)/g - h.T
-
-        print("Network created in %f seconds" % (time.time()-st))
 
     def create_labor_network(self, N1, N2, N3):
         for n1 in range(len(N1)):
@@ -210,7 +210,20 @@ class Economy:
         self.balance_sheet_agg = so_agg.get_balance_sheet(agents_dict)
         return self.balance_sheet_agg
 
+    def calc_prev_statistics(self):
+        self.calc_average_wage()
+
+    def calc_average_wage(self):
+        w = 0
+        for h in self.households.values():
+            w = w + h.w
+        self.w_bar = w/self.param[3][0]
+
+    def calc_aggregate_expectation(self):
+        self.exp_wbar = self.exp_wbar + self.lambda_e*(self.w_bar - self.exp_wbar)
+
     def form_expectation(self):
+        self.calc_aggregate_expectation()
         for h in self.households.values():
             h.form_expectations()
 
@@ -224,12 +237,12 @@ class Economy:
         for f_c in self.firms_cons.values():
             f_c.calc_desired_output()
             f_c.calc_labor_demand()
-            f_c.set_price()
+            f_c.set_price(self.exp_wbar)
 
         for f_k in self.firms_cap.values():
             f_k.calc_desired_output()
             f_k.calc_labor_demand()
-            f_k.set_price()
+            f_k.set_price(self.exp_wbar)
 
     def household_revise_wages(self):
         for h in self.households.values():
@@ -243,6 +256,9 @@ class Economy:
     def calc_investment_demand(self):
         for f_c in self.firms_cons.values():
             f_c.calc_real_inv_demand()
+
+    def select_capital_supplier(self):
+        cgmkt.select_supplier(self.firms_cons, self.firms_cap)
 
     def get_aggregate_tf_matrix(self):
         agents_dict = self.get_agents_dict()

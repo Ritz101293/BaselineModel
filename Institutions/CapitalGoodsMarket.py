@@ -19,18 +19,21 @@ def select_supplier(firm_c, firm_k):
     id_firm_k = np.array(list(firm_k.keys()))
 
     for f_c in id_firm_c:
-        chi = firm_c[f_c].chi_k
+        f_obj = firm_c[f_c]
+        chi = f_obj.chi_k
         s_choice = np.random.choice(id_firm_k, size=chi, replace=False)
         P = np.array([firm_k[i].Pk for i in s_choice])
         min_index = np.argmin(P)
         P_new = P[min_index]
-        P_old = firm_k[firm_c[f_c].id_firm_cap].Pk
+        P_old = firm_k[f_obj.id_firm_cap].Pk
         if P_new < P_old:
-            p_s = cb.get_switch_probability(firm_c[f_c].epsilon_k, P_old, P_new)
+            p_s = cb.get_switch_probability(f_obj.epsilon_k, P_old, P_new)
             I_s = np.random.choice([1, 0], size=1, replace=False, p=[p_s, 1 - p_s])[0]
             if I_s == 1:
-                firm_c[f_c].id_firm_cap = s_choice[min_index]
+                f_obj.id_firm_cap = s_choice[min_index]
             else:
                 pass
         else:
             pass
+        f_obj.I_nD = f_obj.I_rD*firm_k[f_obj.id_firm_cap].Pk
+    # return firm_c, firm_k
