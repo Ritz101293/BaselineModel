@@ -7,7 +7,8 @@ Created on Sun Mar 10 21:38:07 2019
 """
 
 
-from collections import deque as dq
+import numpy as np
+from scipy.stats import foldnorm as FN
 
 
 class FirmCons:
@@ -17,46 +18,63 @@ class FirmCons:
         self.id = 10000 + fcid
         self.id_fc = fcid
 
-        # Information variables
-        self.id_bank_l = dq([], maxlen=20)
-        self.inv = dq([FC[17]/size_fc, FC[17]/size_fc], maxlen=2)
-        self.uc = dq([FC[14], FC[14]], maxlen=2)
-        self.uvc = dq([FC[15], FC[15]], maxlen=2)
-        self.MU = dq([FC[3], FC[3]], maxlen=2)
-        self.OCF = dq([FC[22]/size_fc, FC[22]/size_fc], maxlen=2)
-        self.S = dq([C, C], maxlen=2)
-        self.r = dq([FC[22]/(size_fc*sum(K)), FC[22]/(size_fc*sum(K))], maxlen=2)
-        self.r_bar = FC[22]/(size_fc*sum(K))
+        kappa = MODEL[3]
+        eta = MODEL[4]
+        # 1) Network variables
+        self.id_bank_l = np.array([-1]*eta)
+        self.i_l = np.array([INT[1]]*eta)
         self.id_workers = set()
-        self.id_firm_cap = dq([], maxlen=20)
-        self.PI = FC[18]/size_fc
-        self.Pc = dq([FC[16], FC[16]], maxlen=2)
+        self.id_firm_cap = 0
         self.id_bank_d = 0
+        # 2) Nominal variables
+        self.PI = FC[18]/size_fc
+        self.div = (FC[18] - FC[19])*FC[2]/size_fc
+        self.OCF = FC[22]/size_fc
+        self.r = FC[22]/(size_fc*np.sum(K))
+        self.prev_D = D
+        # 3) Desired variables
         self.Y_D = C
         self.N_D = FC[0]//size_fc
+        self.I_rD = Yk/size_fc
+        self.I_nD = Yk*Pk/size_fc
         self.u_D = MODEL[8]
+        # 4) Real variables
+        self.inv = np.array([FC[17]/size_fc, FC[17]/size_fc])
+        self.S = C
+        self.I_r = Yk/size_fc
         self.Y_r = C
-        self.K_r = sum(K)/Pk
+        self.K_r = np.array([MODEL[10]/(size_fc*kappa)]*kappa)
+        self.L_r = np.array([L[0]]*eta)
+        # 5) Information variables
+        self.u_bar = MODEL[8]
+        self.r_bar = FC[22]/(size_fc*np.sum(K))
+        self.l_k = MODEL[9]
+        # 6) Price, Interest variables
+        self.uc = np.array([FC[14], FC[14]])
+        self.uvc = np.array([FC[15], FC[15]])
+        self.MU = FC[3]
+        self.Pc = FC[16]
+        self.Pk = np.array([Pk/(1 + MODEL[0])**i for i in range(kappa)])
 
         # Balance sheet variables
-        self.D = dq([D, D], maxlen=2)
-        self.L = dq(L, maxlen=20)
+        self.D = D
+        self.L = np.array(L)
         self.C = FC[17]*FC[14]/size_fc
-        self.K = dq(K, maxlen=20)
+        self.K = np.array(K)
 
         # Transaction variables
         self.Y_n = C*FC[16]
         self.W = MODEL[2]*FC[0]/size_fc
         self.CG_inv = (FC[17]*FC[14]/size_fc)*(MODEL[0]/(1 + MODEL[0]))
-        self.I_r = Yk*Pk/size_fc
+        self.I_n = Yk*Pk/size_fc
         self.cap_amort = FC[21]/size_fc
         self.T = FC[19]/size_fc
         self.int_D = D*INT[0]/(1 + MODEL[0])
-        self.int_L = sum(L)*INT[1]/(1 + MODEL[0])
+        self.int_L = np.sum(L)*INT[1]/(1 + MODEL[0])
         self.PI_CA = (FC[18] - FC[19])/size_fc
         self.PI_KA = (FC[18] - FC[19])*(1 - FC[2])/size_fc
         self.del_D = D*MODEL[0]/(1 + MODEL[0])
-        self.del_L = sum(L)*MODEL[0]/(1 + MODEL[0])
+        self.del_L = np.sum(L)*MODEL[0]/(1 + MODEL[0])
 
         # Parameters
         self.nu = FC[1]
@@ -71,8 +89,65 @@ class FirmCons:
         self.epsilon_c = FC[11]
         self.epsilon_d = FC[12]
         self.epsilon_k = FC[13]
+        self.mu_K = MODEL[6]
+        self.kappa = MODEL[3]
+        self.eta = MODEL[3]
 
         # Expectation variables
-        self.exp_S = dq([C, C], maxlen=2)
-        self.exp_W = dq([MODEL[2]*FC[0]/size_fc, MODEL[2]*FC[0]/size_fc], maxlen=2)
-        self.exp_OCF = dq([FC[22]/size_fc, FC[22]/size_fc], maxlen=2)
+        self.exp_S = C
+        self.exp_W = MODEL[2]*FC[0]/size_fc
+        self.exp_OCF = FC[22]/size_fc
+        self.exp_div = (FC[18] - FC[19])*FC[2]/size_fc
+
+    # BEHAVIOUR OF CONSUMPTION FIRM
+    def get_net_worth(self):
+        return self.D - np.sum(self.L) + self.C + np.sum(self.K)
+
+    def get_balance_sheet(self, isT0):
+        if isT0:
+            self.prev_D = self.D
+            self.D = self.D + self.del_D
+            self.L = self.L + self.del_L
+        return np.array([self.D, -np.sum(self.L), self.C, np.sum(self.K),
+                         0, 0, 0, self.get_net_worth()])
+
+    def get_tf_matrix(self):
+        tf = np.zeros((18, 2))
+        tf[:, 0] = [self.Y_n, -self.W, 0, self.CG_inv, 0,
+                    -self.cap_amort, -self.T, self.int_D, 0, -self.int_L,
+                    0, -self.PI_CA, 0, 0, 0, 0, 0, 0]
+        tf[:, 1] = [0, 0, 0, -self.CG_inv,  -self.I_n, self.cap_amort,
+                    0, 0, 0, 0, 0, self.PI_KA, 0, -self.del_D, 0, 0, 0,
+                    self.del_L]
+        return tf
+
+    def form_expectations(self):
+        self.exp_S = self.exp_S + self.lambda_e*(self.S - self.exp_S)
+        self.exp_W = self.exp_W + self.lambda_e*(self.W - self.exp_W)
+        self.exp_OCF = self.exp_OCF + self.lambda_e*(self.OCF - self.exp_OCF)
+        self.exp_div = self.exp_div + self.lambda_e*(self.div - self.exp_div)
+
+    def calc_desired_output(self):
+        self.Y_D = self.exp_S*(1 + self.nu) - self.inv[0]
+
+    def get_desired_cap_util(self):
+        self.u_D = min(1, self.Y_D/(self.mu_K*np.sum(self.K_r)))
+        return self.u_D
+
+    def calc_labor_demand(self):
+        self.N_D = self.get_desired_cap_util()*np.sum(self.K_r)/self.l_k
+
+    def calc_markup(self):
+        fn = FN.rvs(0, loc=0, scale=0.0094)
+        self.MU = self.MU*(1 - fn) if (self.inv[0]/self.S > self.nu) else self.MU*(1 + fn)
+
+    def set_price(self):
+        self.calc_markup()
+        self.Pc = (1 + self.MU)*self.exp_W*self.N_D/self.Y_D
+
+    def get_productive_cap_growth(self):
+        return (self.gamma_1*(self.r - self.r_bar)/self.r_bar) + (self.gamma_2*(self.u_D - self.u_bar)/self.u_bar)
+
+    def calc_real_inv_demand(self):
+        gD = self.get_productive_cap_growth()
+        self.I_rD = gD*np.sum(self.K_r) + self.K_r[-1]

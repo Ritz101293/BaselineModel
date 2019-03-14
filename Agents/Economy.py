@@ -19,13 +19,14 @@ from Agents.Bank import Bank as b
 from Agents.Govt import Govt as gov
 from Agents.CentralBank import CentralBank as cb
 from StatDept.Initializer import InitialValues as iv
+from StatDept.StatOffice import Aggregate as so_agg
 
 
 class Economy:
 
     def __init__(self, balance_sheet, tf_matrix, T, parameters, network):
         self.balance_sheet_agg = balance_sheet
-        self.tf_matric_agg = tf_matrix
+        self.tf_matrix_agg = tf_matrix
         self.T = T
         self.param = parameters
         self.households = {}
@@ -34,6 +35,10 @@ class Economy:
         self.banks = {}
         self.govt = None
         self.central_bank = None
+
+        self.u_n = parameters[4][1]
+        self.i_lbar = parameters[1][1]
+        self.i_dbar = parameters[1][0]
 
     def populate(self):
         st = time.time()
@@ -87,8 +92,8 @@ class Economy:
             self.households[i] = household
 
         for i in range(size_fc):
-            firm_cons = fc(Dfc, Lc, C_r/size_fc, Kc, FC, MODEL, Pk, FK[14], 
-                           INT, size_fc, i)
+            firm_cons = fc(Dfc, Lc, C_r/size_fc, Kc, FC, MODEL,
+                           Pk, FK[14], INT, size_fc, i)
             self.firms_cons[10000 + i] = firm_cons
 
         for i in range(size_fk):
@@ -103,9 +108,11 @@ class Economy:
         GCB.append(UN)
         GCB.append(HH[7] + FC[19] + FK[16] + (self.banks[30000].T)*size_b)
 
-        self.govt = gov(abs(self.balance_sheet_agg[4][4]), GCB, TAX, MODEL, INT)
+        self.govt = gov(abs(self.balance_sheet_agg[4][4]),
+                        GCB, TAX, MODEL, INT)
         self.central_bank = cb(abs(self.balance_sheet_agg[4][5]),
-                               abs(self.balance_sheet_agg[5][5]), GCB, INT, MODEL)
+                               abs(self.balance_sheet_agg[5][5]),
+                               GCB, INT, MODEL)
 
         print("Population created in %f seconds" % (time.time()-st))
 
@@ -118,13 +125,15 @@ class Economy:
 
         omega = self.govt.omega
         tau = self.govt.tau_h
-        g_ss = self.param[4][0]
+        g = 1 + self.param[4][0]
         for h in self.households.values():
             if h.u_h > 0:
                 h.dole = omega*h.w_bar
-                h.T = tau*(h.int_D + h.div)/(1 + g_ss)
+                h.T = tau*((h.int_D + h.div)/g)
+                h.NI = h.dole + (h.int_D + h.div)/g - h.T
             else:
-                h.T = tau*(h.w + ((h.int_D + h.div)/(1 + g_ss)))
+                h.T = tau*(h.w + (h.int_D + h.div)/g)
+                h.NI = h.w + (h.int_D + h.div)/g - h.T
 
         print("Network created in %f seconds" % (time.time()-st))
 
@@ -172,11 +181,9 @@ class Economy:
 
     def create_capital_network(self, KC):
         for i in range(len(KC)):
-            fk = self.getObjectById(20000 + i)
             for k in KC[i]:
-                fk.id_firm_cons.add(k)
                 fc = self.getObjectById(k)
-                fc.id_firm_cap = dq([20000 + i]*20, maxlen=20)
+                fc.id_firm_cap = 20000 + i
 
     def getObjectById(self, id_):
         # flag is 0, 1, 2, 3 for households, firm_cons,
@@ -194,8 +201,50 @@ class Economy:
             print("Enter the valid flag: 0, 1, 2 or 3")
             return None
 
-    def get_aggregate_bal_sheet(self):
-        return 0
+    def get_agents_dict(self):
+        return [self.households, self.firms_cons, self.firms_cap,
+                self.banks, self.govt, self.central_bank]
+
+    def get_aggregate_bal_sheet(self, isT0=False):
+        agents_dict = self.get_agents_dict()
+        self.balance_sheet_agg = so_agg.get_balance_sheet(agents_dict, isT0)
+        return self.balance_sheet_agg
+
+    def form_expectation(self):
+        for h in self.households.values():
+            h.form_expectations()
+
+        for f_c in self.firms_cons.values():
+            f_c.form_expectations()
+
+        for f_k in self.firms_cap.values():
+            f_k.form_expectations()
+
+    def production_labor_prices(self):
+        for f_c in self.firms_cons.values():
+            f_c.calc_desired_output()
+            f_c.calc_labor_demand()
+            f_c.set_price()
+
+        for f_k in self.firms_cap.values():
+            f_k.calc_desired_output()
+            f_k.calc_labor_demand()
+            f_k.set_price()
+
+    def household_revise_wages(self):
+        for h in self.households.values():
+            h.revise_wage(self.u_n)
+
+    def set_interest_rates(self):
+        for bk in self.banks.values():
+            bk.set_interest_rates(self.i_dbar, self.i_lbar,
+                                  self.central_bank.LR, self.central_bank.CR)
+
+    def calc_investment_demand(self):
+        for f_c in self.firms_cons.values():
+            f_c.calc_real_inv_demand()
 
     def get_aggregate_tf_matrix(self):
-        return 0
+        agents_dict = self.get_agents_dict()
+        self.tf_matrix_agg = so_agg.get_tf_matrix(agents_dict)
+        return self.tf_matrix_agg

@@ -25,7 +25,7 @@ MC = 1
 T = 1
 
 balance_sheet = np.zeros((8, 7, T + 1, MC))
-tf_matrix = np.zeros((19, 11, T + 1, MC))
+tf_matrix = np.zeros((18, 10, T + 1, MC))
 
 st = time.time()
 bs, tf, params = cb.calibrateModel()
@@ -47,7 +47,7 @@ for mc in range(MC):
     for t in range(1, T + 1):
         balance_sheet[:, :, t, mc] = E.get_aggregate_bal_sheet()
         # DO some stuff!!!
-        tf_matrix[:, :, t, mc] = E.get_aggregate_tf_matrix()
+        # tf_matrix[:, :, t, mc] = E.get_aggregate_tf_matrix()
         print(t)
 
 print("total time elapsed: %f seconds" % (time.time() - start_time))

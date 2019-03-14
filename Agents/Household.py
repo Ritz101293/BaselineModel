@@ -7,7 +7,8 @@ Created on Fri Mar  8 20:21:57 2019
 """
 
 
-from collections import deque as dq
+import numpy as np
+from scipy.stats import foldnorm as FN
 
 
 class Household:
@@ -17,18 +18,26 @@ class Household:
         self.id = 0 + hid
         self.id_h = hid
 
-        # Information variables
+        # 1) Network variables
         self.id_firm = 0
         self.id_bank_d = 0
+        self.id_firm_c = hid//80
+        # 2) Nominal variables
         self.w_bar = MODEL[2]
-        self.C_r = C_r
+        self.NI = 0
+        self.prev_D = D
+        # 3) Desired variables
         self.C_D = C_r
+        # 4) Real variables
+        self.C_r = C_r
+        # 5) Information variables
         self.u_h = 1
-        self.w_prev = MODEL[2]
         self.u_bar = MODEL[1]
+        # 6) Price, Interest variables
+        self.Pc = Pc
 
         # Balance sheet variables
-        self.D = dq([D, D], maxlen=2)
+        self.D = D
 
         # Transaction Matrix variables
         self.C_n = C_r*Pc
@@ -50,4 +59,34 @@ class Household:
         self.epsilon_d = HH[6]
 
         # Expectation variables
-        self.exp_Pc = dq([Pc, Pc], maxlen=2)
+        self.exp_Pc = Pc
+
+    # DEFINITION OF HOUSEHOLD BEHAVIOURS
+    def get_net_worth(self):
+        return self.D
+
+    def get_balance_sheet(self, isT0):
+        if isT0:
+            self.prev_D = self.D
+            self.D = self.D + self.del_D
+        return np.array([self.D, 0, 0, 0, 0, 0, 0, self.get_net_worth()])
+
+    def get_tf_matrix(self):
+        return np.array([-self.C_n, self.w, self.dole, 0, 0, 0, -self.T,
+                         self.int_D, 0, 0, 0, self.div, 0, -self.del_D,
+                         0, 0, 0, 0])
+
+    def form_expectations(self):
+        self.exp_Pc = self.exp_Pc + self.lambda_e*(self.Pc - self.exp_Pc)
+
+    def revise_wage(self, u_n):
+        fn = FN.rvs(0, loc=0, scale=0.0094)
+        if self.u_h > 2:
+            self.w_bar = self.w_bar*(1 - fn)
+        elif (self.u_h <= 2 and u_n <= self.u_bar):
+            self.w_bar = self.w_bar*(1 + fn)
+        else:
+            pass
+
+    def calc_desired_consumption(self):
+        self.C_d = ((self.alpha_1*self.NI) + (self.alpha_2*self.get_net_worth()))/self.exp_Pc

@@ -7,7 +7,8 @@ Created on Mon Mar 11 15:19:19 2019
 """
 
 
-from collections import deque as dq
+import numpy as np
+from scipy.stats import foldnorm as FN
 
 
 class Bank:
@@ -17,14 +18,21 @@ class Bank:
         self.id = 30000 + bid
         self.id_b = bid
 
-        # Information variables
-        self.i_D = dq([INT[0], INT[0]], maxlen=2)
-        self.i_L = dq([INT[1], INT[1]], maxlen=2)
+        # 1) Network variables
         self.id_depositors = set()
         self.id_debtors = set()
+        # 2) Nominal variables
+        self.PI = (L*INT[1]/(1 + MODEL[0])) + (B*INT[2]/(1 + MODEL[0])) - (D*INT[0]/(1 + MODEL[0]))
+        # 3) Desired variables
+        # 4) Real variables
+        # 5) Information variables
         self.LR = (-D + L + B + R)/L
         self.CR = R/D
-        self.PI = (L*INT[1]/(1 + MODEL[0])) + (B*INT[2]/(1 + MODEL[0])) - (D*INT[0]/(1 + MODEL[0]))
+        # 6) Price, Interest variables
+        self.i_d = INT[0]
+        self.i_l = INT[1]
+        self.i_dprev = INT[0]
+        self.i_lprev = INT[1]
 
         # Balance Sheet variables
         self.D = D
@@ -52,3 +60,35 @@ class Bank:
         self.zeta_c = BANK[1]
         self.zeta_k = BANK[2]
         self.beta = BANK[3]
+
+    # BEHAVIOUR OF BANK
+    def get_net_worth(self):
+        return -self.D + self.L + self.B + self.R - self.A
+
+    def get_balance_sheet(self, isT0):
+        if isT0:
+            self.D = self.D + self.del_D
+            self.L = self.L + self.del_L
+            self.B = self.B + self.del_B
+            self.R = self.R + self.del_R
+            self.A = self.A + self.del_A
+        return np.array([-self.D, self.L, 0, 0, self.B, self.R, -self.A,
+                         self.get_net_worth()])
+
+    def get_tf_matrix(self):
+        tf = np.zeros((18, 2))
+        tf[:, 0] = [0, 0, 0, 0, 0, 0, -self.T, -self.del_D, self.int_B,
+                    self.int_L, 0, -self.PI_CA, 0, 0, 0, 0, 0, 0]
+        tf[:, 1] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, self.PI_KA, 0,
+                    self.del_D, self.del_A, -self.del_R, -self.del_B,
+                    -self.del_L]
+        return tf
+
+    def set_interest_rates(self, i_dbar, i_lbar, LR, CR):
+        self.i_dprev = self.i_d
+        fn = FN.rvs(0, loc=0, scale=0.0095)
+        self.i_d = self.i_d*(1 + fn) if self.LR < LR else self.i_d*(1 - fn)
+
+        self.i_lprev = self.i_l
+        fn = FN.rvs(0, loc=0, scale=0.0095)
+        self.i_l = self.i_l*(1 + fn) if self.CR < CR else self.i_l*(1 - fn)

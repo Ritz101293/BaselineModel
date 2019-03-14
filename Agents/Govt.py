@@ -7,13 +7,18 @@ Created on Mon Mar 11 18:42:55 2019
 """
 
 
-from collections import deque as dq
+import numpy as np
 
 
 class Govt:
 
     def __init__(self, B, GCB, TAX, MODEL, INT):
-        # Information variables
+        # 1) Network variables
+        # 2) Nominal variables
+        # 3) Desired variables
+        # 4) Real variables
+        # 5) Information variables
+        # 6) Price, Interest variables
         self.Pb = GCB[2]
         self.tau_h = TAX[0]
         self.tau_c = TAX[1]
@@ -33,3 +38,17 @@ class Govt:
 
         # Parameters
         self.omega = GCB[1]
+
+    # BEHAVIOUR OF GOVT
+    def get_net_worth(self):
+        return -self.B
+
+    def get_balance_sheet(self, isT0):
+        if isT0:
+            self.B = self.B + self.del_B
+        return np.array([0, 0, 0, 0, -self.B, 0, 0, self.get_net_worth()])
+
+    def get_tf_matrix(self):
+        return np.array([0, -self.W, -self.dole, 0, 0, 0, self.T, 0,
+                         -self.int_B, 0, 0, 0, self.PI_cb, 0, 0, 0,
+                         self.del_B, 0])
