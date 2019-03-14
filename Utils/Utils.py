@@ -8,6 +8,7 @@ Created on Mon Mar  4 18:45:22 2019
 
 
 import numpy as np
+from scipy.stats import foldnorm as FN
 
 
 def summation(q, rev=False):
@@ -19,3 +20,11 @@ def summation(q, rev=False):
 
 def add_replace_element(array, e):
     return np.concatenate(([e], array[:-1]))
+
+
+def update_variable(var, cond):
+    fn = FN.rvs(0, loc=0, scale=0.0094)
+    if cond:
+        return var*(1 + fn)
+    else:
+        return var*(1 - fn)

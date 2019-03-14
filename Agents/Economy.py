@@ -21,6 +21,7 @@ from Agents.CentralBank import CentralBank as cb
 from Institutions import CapitalGoodsMarket as cgmkt
 from StatDept.Initializer import InitialValues as iv
 from StatDept.StatOffice import Aggregate as so_agg
+from Utils import Utils as ut
 
 
 class Economy:
@@ -210,14 +211,30 @@ class Economy:
         self.balance_sheet_agg = so_agg.get_balance_sheet(agents_dict)
         return self.balance_sheet_agg
 
-    def calc_prev_statistics(self):
-        self.calc_average_wage()
-
     def calc_average_wage(self):
         w = 0
+        c = 0
         for h in self.households.values():
             w = w + h.w
-        self.w_bar = w/self.param[3][0]
+            if h.u_h == 0:
+                c = c + 1
+        self.w_bar = w/c
+
+    def calc_average_banking_variables(self):
+        cr, lr, i_d, i_l = 0, 0, 0, 0
+        for bk in self.banks.values():
+            cr = cr + bk.CR
+            lr = lr + bk.LR
+            i_d = i_d + bk.i_d
+            i_l = i_l + bk.i_l
+        self.central_bank.LR = lr/self.param[3][3]
+        self.central_bank.CR = cr/self.param[3][3]
+        self.i_dbar = i_d/self.param[3][3]
+        self.i_lbar = i_l/self.param[3][3]
+
+    def calc_prev_statistics(self):
+        self.calc_average_wage()
+        self.calc_average_banking_variables()
 
     def calc_aggregate_expectation(self):
         self.exp_wbar = self.exp_wbar + self.lambda_e*(self.w_bar - self.exp_wbar)

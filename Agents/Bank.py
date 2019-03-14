@@ -8,7 +8,8 @@ Created on Mon Mar 11 15:19:19 2019
 
 
 import numpy as np
-from scipy.stats import foldnorm as FN
+
+from Utils import Utils as ut
 
 
 class Bank:
@@ -80,9 +81,7 @@ class Bank:
 
     def set_interest_rates(self, i_dbar, i_lbar, LR, CR):
         self.i_dprev = self.i_d
-        fn = FN.rvs(0, loc=0, scale=0.0095)
-        self.i_d = self.i_d*(1 + fn) if self.LR < LR else self.i_d*(1 - fn)
+        self.i_d = ut.update_variable(self.i_d, self.LR < LR)
 
         self.i_lprev = self.i_l
-        fn = FN.rvs(0, loc=0, scale=0.0095)
-        self.i_l = self.i_l*(1 + fn) if self.CR < CR else self.i_l*(1 - fn)
+        self.i_l = ut.update_variable(self.i_l, self.CR < CR)

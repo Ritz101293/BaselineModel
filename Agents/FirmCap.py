@@ -8,7 +8,8 @@ Created on Mon Mar 11 15:10:23 2019
 
 
 import numpy as np
-from scipy.stats import foldnorm as FN
+
+from Utils import Utils as ut
 
 
 class FirmCap:
@@ -31,6 +32,7 @@ class FirmCap:
         # 3) Desired variables
         self.Y_D = FK[14]/size_fk
         self.N_D = FK[0]//size_fk
+        self.L_D = L[0]
         # 4) Real variables
         self.Y_r = FK[14]/size_fk
         self.L_r = np.array([L[0]]*eta)
@@ -103,12 +105,15 @@ class FirmCap:
         self.Y_D = self.exp_S*(1 + self.nu) - self.inv[0]
 
     def calc_labor_demand(self):
-        self.N_D = self.Y_D//self.mu_N
+        self.N_D = round(self.Y_D/self.mu_N)
 
     def calc_markup(self):
-        fn = FN.rvs(0, loc=0, scale=0.0094)
-        self.MU = self.MU*(1 - fn) if (self.inv[0]/self.S > self.nu) else self.MU*(1 + fn)
+        self.MU = ut.update_variable(self.MU, self.inv[0]/self.S <= self.nu)
 
     def set_price(self, exp_wbar):
         self.calc_markup()
         self.Pk = (1 + self.MU)*exp_wbar*self.N_D/self.Y_D
+
+    def calc_credit_demand(self, exp_wbar):
+        self.L_D = self.I_nD + self.exp_div + exp_wbar*self.sigma*self.N_D - self.exp_OCF
+

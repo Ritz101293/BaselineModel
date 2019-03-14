@@ -10,6 +10,8 @@ Created on Fri Mar  8 20:21:57 2019
 import numpy as np
 from scipy.stats import foldnorm as FN
 
+from Utils import Utils as ut
+
 
 class Household:
 

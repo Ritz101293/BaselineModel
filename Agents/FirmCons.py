@@ -8,7 +8,8 @@ Created on Sun Mar 10 21:38:07 2019
 
 
 import numpy as np
-from scipy.stats import foldnorm as FN
+
+from Utils import Utils as ut
 
 
 class FirmCons:
@@ -38,6 +39,7 @@ class FirmCons:
         self.I_rD = Yk/size_fc
         self.I_nD = Yk*Pk/size_fc
         self.u_D = MODEL[8]
+        self.L_D = L[0]
         # 4) Real variables
         self.inv = np.array([FC[17]/size_fc, FC[17]/size_fc])
         self.S = C
@@ -130,11 +132,10 @@ class FirmCons:
         return self.u_D
 
     def calc_labor_demand(self):
-        self.N_D = self.get_desired_cap_util()*np.sum(self.K_r)//self.l_k
+        self.N_D = round(self.get_desired_cap_util()*np.sum(self.K_r)/self.l_k)
 
     def calc_markup(self):
-        fn = FN.rvs(0, loc=0, scale=0.0094)
-        self.MU = self.MU*(1 - fn) if (self.inv[0]/self.S > self.nu) else self.MU*(1 + fn)
+        self.MU = ut.update_variable(self.MU, self.inv[0]/self.S <= self.nu)
 
     def set_price(self, exp_wbar):
         self.calc_markup()
@@ -146,3 +147,6 @@ class FirmCons:
     def calc_real_inv_demand(self):
         gD = self.get_productive_cap_growth()
         self.I_rD = gD*np.sum(self.K_r) + self.K_r[-1]
+
+    def calc_credit_demand(self, exp_wbar):
+        self.L_D = self.I_nD + self.exp_div + exp_wbar*self.sigma*self.N_D - self.exp_OCF
