@@ -165,5 +165,5 @@ def solve3():
     fh.set_variable(config, 'central_bank', 'profit', str(X[17]))
 
     fh.write_config(config, 'config_final.ini')
-    print("Final Configuration file written!!")
+    # print("Final Configuration file written!!")
     fh.close_file(c_file)

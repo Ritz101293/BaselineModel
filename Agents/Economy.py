@@ -19,6 +19,7 @@ from Agents.Bank import Bank as b
 from Agents.Govt import Govt as gov
 from Agents.CentralBank import CentralBank as cb
 from Institutions import CapitalGoodsMarket as cgmkt
+from Institutions import CreditMarket as crmkt
 from StatDept.Initializer import InitialValues as iv
 from StatDept.StatOffice import Aggregate as so_agg
 from Utils import Utils as ut
@@ -139,51 +140,55 @@ class Economy:
                 h.NI = h.w + (h.int_D + h.div)/g - h.T
 
     def create_labor_network(self, N1, N2, N3):
+        getObj = self.getObjectById
         for n1 in range(len(N1)):
-            f = self.getObjectById(10000 + n1)
+            f = getObj(10000 + n1)
             for h1 in N1[n1]:
                 f.id_workers.add(h1)
-                h = self.getObjectById(h1)
+                h = getObj(h1)
                 h.id_firm = 10000 + n1
                 h.w = self.param[4][2]
                 h.u_h = 0
 
         for n2 in range(len(N2)):
-            f = self.getObjectById(20000 + n2)
+            f = getObj(20000 + n2)
             for h1 in N2[n2]:
                 f.id_workers.add(h1)
-                h = self.getObjectById(h1)
+                h = getObj(h1)
                 h.id_firm = 10000 + n2
                 h.w = self.param[4][2]
                 h.u_h = 0
 
         for n3 in N3:
             self.govt.id_workers.add(n3)
-            h = self.getObjectById(n3)
+            h = getObj(n3)
             h.id_firm = -1
             h.w = self.param[4][2]
             h.u_h = 0
 
     def create_deposit_network(self, BD):
+        getObj = self.getObjectById
         for i in range(len(BD)):
-            b = self.getObjectById(30000 + i)
+            b = getObj(30000 + i)
             for d in BD[i]:
                 b.id_depositors.add(d)
-                dp = self.getObjectById(d)
+                dp = getObj(d)
                 dp.id_bank_d = 30000 + i
 
     def create_credit_network(self, BC):
+        getObj = self.getObjectById
         for i in range(len(BC)):
-            b = self.getObjectById(30000 + i)
+            b = getObj(30000 + i)
             for d in BC[i]:
                 b.id_debtors.add(d)
-                ln = self.getObjectById(d)
+                ln = getObj(d)
                 ln.id_bank_l = dq([30000 + i]*20, maxlen=20)
 
     def create_capital_network(self, KC):
+        getObj = self.getObjectById
         for i in range(len(KC)):
             for k in KC[i]:
-                fc = self.getObjectById(k)
+                fc = getObj(k)
                 fc.id_firm_cap = 20000 + i
 
     def getObjectById(self, id_):
@@ -251,24 +256,29 @@ class Economy:
             f_k.form_expectations()
 
     def production_labor_prices(self):
+        w_e = self.exp_wbar
         for f_c in self.firms_cons.values():
             f_c.calc_desired_output()
             f_c.calc_labor_demand()
-            f_c.set_price(self.exp_wbar)
+            f_c.set_price(w_e)
 
         for f_k in self.firms_cap.values():
             f_k.calc_desired_output()
             f_k.calc_labor_demand()
-            f_k.set_price(self.exp_wbar)
+            f_k.set_price(w_e)
 
     def household_revise_wages(self):
+        u_n = self.u_n
         for h in self.households.values():
-            h.revise_wage(self.u_n)
+            h.revise_wage(u_n)
 
     def set_interest_rates(self):
+        idb = self.i_dbar
+        ilb = self.i_lbar
+        LR = self.central_bank.LR
+        CR = self.central_bank.CR
         for bk in self.banks.values():
-            bk.set_interest_rates(self.i_dbar, self.i_lbar,
-                                  self.central_bank.LR, self.central_bank.CR)
+            bk.set_interest_rates(idb, ilb, LR, CR)
 
     def calc_investment_demand(self):
         for f_c in self.firms_cons.values():
@@ -276,6 +286,9 @@ class Economy:
 
     def select_capital_supplier(self):
         cgmkt.select_supplier(self.firms_cons, self.firms_cap)
+
+    def credit_market(self):
+        crmkt.credit_interaction(self.firms_cons, self.firms_cap, self.banks)
 
     def get_aggregate_tf_matrix(self):
         agents_dict = self.get_agents_dict()

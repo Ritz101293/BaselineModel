@@ -18,8 +18,12 @@ def summation(q, rev=False):
         return sum([i*(q**(20-i)) for i in range(1, 21)])
 
 
-def add_replace_element(array, e):
-    return np.concatenate(([e], array[:-1]))
+def add_element(array, e):
+    return np.concatenate(([e], array))
+
+
+def pop_element(array):
+    return array[:-1]
 
 
 def update_variable(var, cond):

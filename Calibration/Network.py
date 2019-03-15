@@ -42,18 +42,19 @@ def get_network_labor(hid, fcid, fkid, bid, Nc, Nk, Ng):
     FC = [[]]*len(fcid)
     FK = [[]]*len(fkid)
     G = []
-
+    choose = np.random.choice
+    isin = np.isin
     for fc in range(len(fcid)):
-        FC[fc] = np.random.choice(np.array(h_id), size=fcN, replace=False)
-        h_id = h_id[~np.isin(h_id, FC[fc])]
+        FC[fc] = choose(np.array(h_id), size=fcN, replace=False)
+        h_id = h_id[~isin(h_id, FC[fc])]
         # h_id = [h for h in h_id if h not in FC[fc]]
 
     for fk in range(len(fkid)):
-        FK[fk] = np.random.choice(h_id, size=fkN, replace=False)
-        h_id = h_id[~np.isin(h_id, FK[fk])]
+        FK[fk] = choose(h_id, size=fkN, replace=False)
+        h_id = h_id[~isin(h_id, FK[fk])]
         # h_id = [h for h in h_id if h not in FK[fk]]
 
-    G = np.random.choice(h_id, size=Ng, replace=False)
+    G = choose(h_id, size=Ng, replace=False)
 
     return (FC, FK, G)
 
@@ -70,17 +71,19 @@ def get_network_deposit(hid, fcid, fkid, bid):
 
     B = [[]]*Nb
 
-
+    choose = np.random.choice
+    isin = np.isin
+    join = np.concatenate
     for b in range(Nb):
-        B[b] = np.random.choice(h_id, size=hb, replace=False)
+        B[b] = choose(h_id, size=hb, replace=False)
         h_id = h_id[~np.isin(h_id, B[b])]
 
         # print(len(fc_id), fcb)
-        B[b] = np.concatenate((B[b], np.random.choice(fc_id, size=fcb, replace=False)))
-        fc_id = fc_id[~np.isin(fc_id, B[b])]
+        B[b] = join((B[b], choose(fc_id, size=fcb, replace=False)))
+        fc_id = fc_id[~isin(fc_id, B[b])]
 
-        B[b] = np.concatenate((B[b], np.random.choice(fk_id, size=fkb, replace=False)))
-        fk_id = fk_id[~np.isin(fk_id, B[b])]
+        B[b] = join((B[b], choose(fk_id, size=fkb, replace=False)))
+        fk_id = fk_id[~isin(fk_id, B[b])]
 
     return B
 
@@ -94,13 +97,15 @@ def get_network_credit(fcid, fkid, bid):
     fk_id = fkid
 
     B = [[]]*Nb
-
+    choose = np.random.choice
+    isin = np.isin
+    join = np.concatenate
     for b in range(Nb):
-        B[b] = np.concatenate((B[b], np.random.choice(fc_id, size=fcb, replace=False)))
-        fc_id = fc_id[~np.isin(fc_id, B[b])]
+        B[b] = join((B[b], choose(fc_id, size=fcb, replace=False)))
+        fc_id = fc_id[~isin(fc_id, B[b])]
 
-        B[b] = np.concatenate((B[b], np.random.choice(fk_id, size=fkb, replace=False)))
-        fk_id = fk_id[~np.isin(fk_id, B[b])]
+        B[b] = join((B[b], choose(fk_id, size=fkb, replace=False)))
+        fk_id = fk_id[~isin(fk_id, B[b])]
 
     return B
 
@@ -112,10 +117,11 @@ def get_network_capital(fcid, fkid):
     fc_id = fcid
 
     FK = [[]]*Nk
-
+    choose = np.random.choice
+    isin = np.isin
     for fk in range(Nk):
-        FK[fk] = np.random.choice(fc_id, size=fck, replace=False)
-        fc_id = fc_id[~np.isin(fc_id, FK[fk])]
+        FK[fk] = choose(fc_id, size=fck, replace=False)
+        fc_id = fc_id[~isin(fc_id, FK[fk])]
 
     return FK
 

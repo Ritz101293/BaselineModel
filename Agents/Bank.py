@@ -61,6 +61,7 @@ class Bank:
         self.zeta_c = BANK[1]
         self.zeta_k = BANK[2]
         self.beta = BANK[3]
+        self.eta = MODEL[4]
 
     # BEHAVIOUR OF BANK
     def get_net_worth(self):
