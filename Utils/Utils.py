@@ -18,7 +18,7 @@ def summation(q, rev=False):
         return sum([i*(q**(20-i)) for i in range(1, 21)])
 
 
-def add_element(array, e):
+def add_element(e, array):
     return np.concatenate(([e], array))
 
 

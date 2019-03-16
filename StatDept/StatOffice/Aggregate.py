@@ -37,7 +37,7 @@ def get_tf_matrix(agents):
     tf[:, 8] = tf_cb[:, 0]
     tf[:, 9] = tf_cb[:, 1]
 
-    return tf
+    return np.round(tf, 4)
 
 
 def get_balance_sheet(agents):
@@ -59,6 +59,6 @@ def get_balance_sheet(agents):
 
     bs[:, 5] = bs[:, 5] + agents[5].get_balance_sheet()
 
-    bs[:, 6] = np.sum(bs[:, 0:5], axis=1)
+    bs[:, 6] = bs[:, 0] + bs[:, 1] + bs[:, 2] + bs[:, 3] + bs[:, 4] + bs[:, 5]
 
-    return bs
+    return np.round(bs, 4)

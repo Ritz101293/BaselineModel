@@ -20,6 +20,7 @@ from Agents.Govt import Govt as gov
 from Agents.CentralBank import CentralBank as cb
 from Institutions import CapitalGoodsMarket as cgmkt
 from Institutions import CreditMarket as crmkt
+from Institutions import LaborMarket as lmkt
 from StatDept.Initializer import InitialValues as iv
 from StatDept.StatOffice import Aggregate as so_agg
 from Utils import Utils as ut
@@ -143,28 +144,33 @@ class Economy:
         getObj = self.getObjectById
         for n1 in range(len(N1)):
             f = getObj(10000 + n1)
+            c = 0
             for h1 in N1[n1]:
-                f.id_workers.add(h1)
+                f.id_workers[c] = h1
                 h = getObj(h1)
                 h.id_firm = 10000 + n1
                 h.w = self.param[4][2]
                 h.u_h = 0
+                c = c + 1
 
         for n2 in range(len(N2)):
             f = getObj(20000 + n2)
+            c = 0
             for h1 in N2[n2]:
-                f.id_workers.add(h1)
+                f.id_workers[c] = h1
                 h = getObj(h1)
                 h.id_firm = 10000 + n2
                 h.w = self.param[4][2]
                 h.u_h = 0
-
+                c = c + 1
+        c = 0
         for n3 in N3:
-            self.govt.id_workers.add(n3)
+            self.govt.id_workers[c] = n3
             h = getObj(n3)
             h.id_firm = -1
             h.w = self.param[4][2]
             h.u_h = 0
+            c = c + 1
 
     def create_deposit_network(self, BD):
         getObj = self.getObjectById
@@ -261,6 +267,7 @@ class Economy:
             f_c.calc_desired_output()
             f_c.calc_labor_demand()
             f_c.set_price(w_e)
+            f_c.calc_credit_demand(w_e)
 
         for f_k in self.firms_cap.values():
             f_k.calc_desired_output()
@@ -287,8 +294,20 @@ class Economy:
     def select_capital_supplier(self):
         cgmkt.select_supplier(self.firms_cons, self.firms_cap)
 
-    def credit_market(self):
-        crmkt.credit_interaction(self.firms_cons, self.firms_cap, self.banks)
+    def credit_market(self, t):
+        crmkt.credit_interaction(self.firms_cons,
+                                 self.firms_cap, self.banks, t)
+
+    def labor_market(self):
+        h_id = [h.id for h in self.households.values() if h.u_h != 0]
+        lmkt.labor_interaction(h_id, self.households, self.firms_cons,
+                               self.firms_cap, self.govt)
+
+    def production(self):
+        for f_c in self.firms_cons.values():
+            f_c.produce()
+        for f_k in self.firms_cap.values():
+            f_k.produce()
 
     def get_aggregate_tf_matrix(self):
         agents_dict = self.get_agents_dict()

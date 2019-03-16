@@ -24,7 +24,7 @@ class FirmCons:
         # 1) Network variables
         self.id_bank_l = np.array([-1]*eta)
         self.i_l = np.array([INT[1]]*eta)
-        self.id_workers = set()
+        self.id_workers = np.array([-1]*round(FC[0]/size_fc))
         self.id_firm_cap = 0
         self.id_bank_d = 0
         # 2) Nominal variables
@@ -33,6 +33,8 @@ class FirmCons:
         self.OCF = FC[22]/size_fc
         self.r = FC[22]/(size_fc*np.sum(K))
         self.prev_D = D
+        self.w = np.array([MODEL[2]]*round(FC[0]/size_fc))
+        self.u = MODEL[8]
         # 3) Desired variables
         self.Y_D = C
         self.N_D = FC[0]//size_fc
@@ -150,3 +152,10 @@ class FirmCons:
 
     def calc_credit_demand(self, exp_wbar):
         self.L_D = self.I_nD + self.exp_div + exp_wbar*self.sigma*self.N_D - self.exp_OCF
+
+    def get_cap_util(self):
+        self.u = self.l_k*len(self.id_workers)/np.sum(self.K_r)
+        return self.u
+
+    def produce(self):
+        self.Y_r = np.sum(self.K_r)*self.mu_K*self.get_cap_util()

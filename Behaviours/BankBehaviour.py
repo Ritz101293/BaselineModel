@@ -20,7 +20,7 @@ def get_default_probability(OCF, ds, zeta):
     return (1/(1 + math.exp((OCF - zeta*ds)/ds)))
 
 
-def handle_loan_request(f_obj, b_obj):
+def handle_loan_request(f_obj, b_obj, t):
     Ld = f_obj.L_D
     i_l = b_obj.i_l
     eta = b_obj.eta
@@ -29,17 +29,17 @@ def handle_loan_request(f_obj, b_obj):
 
     count = eta
     alpha = 1/eta
-    exp_PI = get_expected_profit(pd, delta, Ld, count, alpha. i_l)
+    exp_PI = get_expected_profit(pd, delta, Ld, count, alpha, i_l)
     if exp_PI >= 0:
         f_obj.id_bank_l.appendleft(b_obj.id)
-        f_obj.L_r = ut.update_array(Ld, f_obj.L_r)
-        f_obj.L = ut.update_array(Ld, f_obj.L)
-        f_obj.i_l = ut.update_array(i_l, f_obj.L_r)
+        f_obj.L_r = ut.add_element(Ld, f_obj.L_r) if t != 1 else ut.add_element(Ld, f_obj.L_r[1:])
+        f_obj.L = ut.add_element(Ld, f_obj.L) if t != 1 else ut.add_element(Ld, f_obj.L[1:])
+        f_obj.i_l = ut.add_element(i_l, f_obj.i_l) if t != 1 else ut.add_element(i_l, f_obj.i_l[1:])
     else:
         f_obj.id_bank_l.appendleft(-1)
-        f_obj.L_r = ut.update_array(0, f_obj.L_r)
-        f_obj.L = ut.update_array(0, f_obj.L)
-        f_obj.i_l = ut.update_array(0, f_obj.L_r)
+        f_obj.L_r = ut.add_element(0, f_obj.L_r) if t != 1 else ut.add_element(Ld, f_obj.L_r[1:])
+        f_obj.L = ut.add_element(0, f_obj.L) if t != 1 else ut.add_element(Ld, f_obj.L[1:])
+        f_obj.i_l = ut.add_element(0, f_obj.L_r) if t != 1 else ut.add_element(i_l, f_obj.i_l[1:])
 
 
 def get_expected_profit(pd, delta, Ld, count, alpha, i_l):

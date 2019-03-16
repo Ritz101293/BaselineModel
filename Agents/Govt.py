@@ -15,14 +15,16 @@ class Govt:
     def __init__(self, B, GCB, TAX, MODEL, INT):
         # 1) Network variables
         # 2) Nominal variables
+        self.w = np.array([MODEL[2]]*GCB[0])
         # 3) Desired variables
+        self.N_D = GCB[0]
         # 4) Real variables
         # 5) Information variables
         # 6) Price, Interest variables
         self.Pb = GCB[2]
         self.tau_h = TAX[0]
         self.tau_c = TAX[1]
-        self.id_workers = set()
+        self.id_workers = np.array([-1]*GCB[0])
         self.UN = GCB[4]
 
         # Balance sheet variables

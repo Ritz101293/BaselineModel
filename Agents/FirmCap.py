@@ -22,13 +22,14 @@ class FirmCap:
         eta = MODEL[4]
         # 1) Network variables
         self.id_bank_l = np.array([-1]*eta)
-        self.id_workers = set()
+        self.id_workers = np.array([-1]*round(FK[0]/size_fk))
         self.id_bank_d = 0
         # 2) Nominal variables
         self.PI = FK[15]/size_fk
         self.OCF = FK[18]/size_fk
         self.div = (FK[15] - FK[16])*FK[2]/size_fk
         self.prev_D = D
+        self.w = np.array([MODEL[2]]*round(FK[0]/size_fk))
         # 3) Desired variables
         self.Y_D = FK[14]/size_fk
         self.N_D = FK[0]//size_fk
@@ -39,7 +40,6 @@ class FirmCap:
         self.S = FK[14]/size_fk
         self.inv = np.array([FK[13]/size_fk, FK[13]/size_fk])
         # 5) Information variables
-        self.mu_N = FK[10]
         # 6) Price, Interest variables
         self.uc = np.array([FK[11], FK[11]])
         self.MU = FK[3]
@@ -73,6 +73,8 @@ class FirmCap:
         self.chi_c = FK[7]
         self.epsilon_d = FK[8]
         self.epsilon_c = FK[9]
+        self.mu_N = FK[10]
+
 
         # Expectation variables
         self.exp_S = FK[14]/size_fk
@@ -116,4 +118,8 @@ class FirmCap:
 
     def calc_credit_demand(self, exp_wbar):
         self.L_D = self.I_nD + self.exp_div + exp_wbar*self.sigma*self.N_D - self.exp_OCF
+
+    def produce(self):
+        self.Y_r = self.mu_N*len(self.id_workers)
+
 
