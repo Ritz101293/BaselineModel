@@ -20,23 +20,23 @@ class Household:
         self.id = 0 + hid
         self.id_h = hid
 
-        # 1) Network variables
+        # Network ids
         self.id_firm = 0
         self.id_bank_d = 0
-        self.id_firm_c = hid//80
-        # 2) Nominal variables
-        self.w_bar = MODEL[2]
+        self.id_firm_c = 10000 + hid//80
+        # Income
         self.NI = 0
-        self.prev_D = D
-        # 3) Desired variables
+        # Consumption
         self.C_D = C_r
-        # 4) Real variables
         self.C_r = C_r
-        # 5) Information variables
+        # Price
+        self.Pc = Pc
+        # Labor
         self.u_h = 1
         self.u_bar = MODEL[1]
-        # 6) Price, Interest variables
-        self.Pc = Pc
+        self.w_bar = MODEL[2]
+        # Finance
+        self.prev_D = D
 
         # Balance sheet variables
         self.D = D

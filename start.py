@@ -48,7 +48,7 @@ for mc in range(MC):
         balance_sheet[:, :, t, mc] = E.get_aggregate_bal_sheet()
         E.form_expectation()
         E.production_labor_prices()
-        E.household_revise_wages()
+        E.household_revise_wages_consumption()
         E.set_interest_rates()
         E.calc_investment_demand()
         E.select_capital_supplier()

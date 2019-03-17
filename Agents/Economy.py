@@ -275,10 +275,11 @@ class Economy:
             f_k.set_price(w_e)
             f_k.calc_credit_demand(w_e)
 
-    def household_revise_wages(self):
+    def household_revise_wages_consumption(self):
         u_n = self.u_n
         for h in self.households.values():
             h.revise_wage(u_n)
+            h.calc_desired_consumption()
 
     def set_interest_rates(self):
         idb = self.i_dbar
