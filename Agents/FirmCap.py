@@ -20,31 +20,35 @@ class FirmCap:
         self.id_fk = fkid
 
         eta = MODEL[4]
-        # 1) Network variables
+        # Network Ids
         self.id_bank_l = np.array([-1]*eta)
         self.id_workers = np.array([-1]*round(FK[0]/size_fk))
         self.id_bank_d = 0
-        # 2) Nominal variables
+        # Output & Sales
+        self.Y_D = FK[14]/size_fk
+        self.Y_r = FK[14]/size_fk
+        self.S = FK[14]/size_fk
+        self.inv = np.array([FK[13]/size_fk, FK[13]/size_fk])
+        # Costs
+        self.uc = np.array([FK[11], FK[11]])
+        # Labor
+        self.N_D = FK[0]//size_fk
+        self.w = np.array([MODEL[2]]*round(FK[0]/size_fk))
+        # Price
+        self.MU = FK[3]
+        self.Pk = FK[12]
+        # Credit
+        self.L_D = L[0]
+        self.L_r = np.array([L[0]]*eta)
+        self.prev_L = sum(L)
+        self.i_l = np.array([INT[1]]*eta)
+        # Finance
         self.PI = FK[15]/size_fk
         self.OCF = FK[18]/size_fk
         self.div = (FK[15] - FK[16])*FK[2]/size_fk
         self.prev_D = D
-        self.w = np.array([MODEL[2]]*round(FK[0]/size_fk))
-        # 3) Desired variables
-        self.Y_D = FK[14]/size_fk
-        self.N_D = FK[0]//size_fk
-        self.L_D = L[0]
-        # 4) Real variables
-        self.Y_r = FK[14]/size_fk
-        self.L_r = np.array([L[0]]*eta)
-        self.S = FK[14]/size_fk
-        self.inv = np.array([FK[13]/size_fk, FK[13]/size_fk])
-        # 5) Information variables
-        # 6) Price, Interest variables
-        self.uc = np.array([FK[11], FK[11]])
-        self.MU = FK[3]
-        self.Pk = FK[12]
-        self.i_l = np.array([INT[1]]*eta)
+        # Efficiency
+        self.mu_N = FK[10]
 
         # Balance sheet variables
         self.D = D
@@ -73,8 +77,6 @@ class FirmCap:
         self.chi_c = FK[7]
         self.epsilon_d = FK[8]
         self.epsilon_c = FK[9]
-        self.mu_N = FK[10]
-
 
         # Expectation variables
         self.exp_S = FK[14]/size_fk
@@ -117,9 +119,30 @@ class FirmCap:
         self.Pk = (1 + self.MU)*exp_wbar*self.N_D/self.Y_D
 
     def calc_credit_demand(self, exp_wbar):
-        self.L_D = self.I_nD + self.exp_div + exp_wbar*self.sigma*self.N_D - self.exp_OCF
+        self.L_D = max(self.exp_div + exp_wbar*self.sigma*self.N_D - self.exp_OCF - self.D, 0)
+
+    def reset_variables(self):
+        self.PI = 0
+        self.OCF = 0
+        self.div = 0
+
+        self.K = 0
+
+        self.Y_n = 0
+        self.W = 0
+        self.CG_inv = 0
+        self.T = 0
+        self.int_D = 0
+        self.int_L = 0
+        self.PI_CA = 0
+        self.PI_KA = 0
+        self.del_D = 0
+        self.del_L = 0
 
     def produce(self):
         self.Y_r = self.mu_N*len(self.id_workers)
-
-
+        self.reset_variables()
+        self.W = sum(self.w)
+        self.uc[0] = self.W/self.Y_r
+        self.S = 0
+        self.inv[0], self.inv[1] = 0, self.inv[0]

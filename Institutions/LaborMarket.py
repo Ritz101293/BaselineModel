@@ -13,9 +13,6 @@ import Utils.Utils as ut
 
 
 def labor_interaction(h_id, household, firm_c, firm_k, govt):
-    id_firm_c = np.array(list(firm_c.keys()))
-    id_firm_k = np.array(list(firm_k.keys()))
-
     choose = np.random.choice
     isin = np.isin
     array = np.array
@@ -24,6 +21,17 @@ def labor_interaction(h_id, household, firm_c, firm_k, govt):
     delete = np.delete
     where = np.where
 
+    h_id = govt_labor_interaction(govt, household, h_id, choose, add_el,
+                                  delete, where)
+    h_id = firmc_labor_interaction(firm_c, household, h_id, choose, isin,
+                                   array, argmin, add_el, delete, where)
+
+    h_id = firmk_labor_interaction(firm_k, household, h_id, choose, isin,
+                                   array, argmin, add_el, delete, where)
+
+
+def govt_labor_interaction(govt, household, h_id, choose, add_el,
+                           delete, where):
     if int(govt.N_D) > int(len(govt.id_workers)):
         vac = int(govt.N_D) - int(len(govt.id_workers))
         for v in range(vac):
@@ -35,10 +43,15 @@ def labor_interaction(h_id, household, firm_c, firm_k, govt):
                 household[hid].id_firm = -1
                 household[hid].w = household[hid].w_bar
                 h_id = delete(h_id, where(h_id == hid))
+        return h_id
     else:
-        pass
         # print("govt doesn't have vacancy")
+        return h_id
 
+
+def firmc_labor_interaction(firm_c, household, h_id, choose, isin,
+                            array, argmin, add_el, delete, where):
+    id_firm_c = np.array(list(firm_c.keys()))
     id_firmc1 = choose(id_firm_c, size=round(len(id_firm_c)/2), replace=False)
     id_firmc2 = id_firm_c[~isin(id_firm_c, id_firmc1)]
 
@@ -102,6 +115,12 @@ def labor_interaction(h_id, household, firm_c, firm_k, govt):
     else:
         pass
         # print("No second round for consumption firms")
+    return h_id
+
+
+def firmk_labor_interaction(firm_k, household, h_id, choose, isin,
+                            array, argmin, add_el, delete, where):
+    id_firm_k = np.array(list(firm_k.keys()))
 
     id_firmk1 = choose(id_firm_k, size=round(len(id_firm_k)/2), replace=False)
     id_firmk2 = id_firm_k[~isin(id_firm_k, id_firmk1)]
@@ -166,3 +185,4 @@ def labor_interaction(h_id, household, firm_c, firm_k, govt):
     else:
         pass
         # print("No second round for capital firms")
+    return h_id

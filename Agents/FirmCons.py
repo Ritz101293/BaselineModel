@@ -21,44 +21,49 @@ class FirmCons:
 
         kappa = MODEL[3]
         eta = MODEL[4]
-        # 1) Network variables
+        # Network Ids
         self.id_bank_l = np.array([-1]*eta)
-        self.i_l = np.array([INT[1]]*eta)
         self.id_workers = np.array([-1]*round(FC[0]/size_fc))
         self.id_firm_cap = 0
         self.id_bank_d = 0
-        # 2) Nominal variables
+        # Output & Sales
+        self.Y_D = C
+        self.Y_r = C
+        self.S = C
+        self.inv = np.array([FC[17]/size_fc, FC[17]/size_fc])
+        # Costs
+        self.uc = np.array([FC[14], FC[14]])
+        self.uvc = np.array([FC[15], FC[15]])
+        # Labor
+        self.N_D = FC[0]//size_fc
+        self.w = np.array([MODEL[2]]*round(FC[0]/size_fc))
+        # Price
+        self.MU = FC[3]
+        self.Pc = FC[16]
+        # Capital stock & Investment
+        self.K_r = np.array([MODEL[10]/(size_fc*kappa)]*kappa)
+        self.Pk = np.array([Pk/(1 + MODEL[0])**i for i in range(kappa)])
+        self.I_rD = Yk/size_fc
+        self.I_nD = Yk*Pk/size_fc
+        self.I_r = Yk/size_fc
+        self.prev_K = sum(K)
+        # Credit
+        self.L_D = L[0]
+        self.L_r = np.array([L[0]]*eta)
+        self.i_l = np.array([INT[1]]*eta)
+        self.prev_L = sum(L)
+        # Finance
         self.PI = FC[18]/size_fc
         self.div = (FC[18] - FC[19])*FC[2]/size_fc
         self.OCF = FC[22]/size_fc
         self.r = FC[22]/(size_fc*np.sum(K))
-        self.prev_D = D
-        self.w = np.array([MODEL[2]]*round(FC[0]/size_fc))
-        self.u = MODEL[8]
-        # 3) Desired variables
-        self.Y_D = C
-        self.N_D = FC[0]//size_fc
-        self.I_rD = Yk/size_fc
-        self.I_nD = Yk*Pk/size_fc
-        self.u_D = MODEL[8]
-        self.L_D = L[0]
-        # 4) Real variables
-        self.inv = np.array([FC[17]/size_fc, FC[17]/size_fc])
-        self.S = C
-        self.I_r = Yk/size_fc
-        self.Y_r = C
-        self.K_r = np.array([MODEL[10]/(size_fc*kappa)]*kappa)
-        self.L_r = np.array([L[0]]*eta)
-        # 5) Information variables
-        self.u_bar = MODEL[8]
         self.r_bar = FC[22]/(size_fc*np.sum(K))
+        self.prev_D = D
+        # Efficiency
+        self.u_D = MODEL[8]
+        self.u = MODEL[8]
+        self.u_bar = MODEL[8]
         self.l_k = MODEL[9]
-        # 6) Price, Interest variables
-        self.uc = np.array([FC[14], FC[14]])
-        self.uvc = np.array([FC[15], FC[15]])
-        self.MU = FC[3]
-        self.Pc = FC[16]
-        self.Pk = np.array([Pk/(1 + MODEL[0])**i for i in range(kappa)])
 
         # Balance sheet variables
         self.D = D
@@ -151,11 +156,40 @@ class FirmCons:
         self.I_rD = gD*np.sum(self.K_r) + self.K_r[-1]
 
     def calc_credit_demand(self, exp_wbar):
-        self.L_D = self.I_nD + self.exp_div + exp_wbar*self.sigma*self.N_D - self.exp_OCF
+        self.L_D = max(self.I_nD + self.exp_div + exp_wbar*self.sigma*self.N_D - self.exp_OCF - self.D, 0)
 
     def get_cap_util(self):
         self.u = self.l_k*len(self.id_workers)/np.sum(self.K_r)
         return self.u
 
+    def reset_variables(self):
+        self.PI = 0
+        self.div = 0
+        self.OCF = 0
+        self.r = 0
+        self.I_r = 0
+
+        self.C = 0
+
+        self.Y_n = 0
+        self.W = 0
+        self.CG_inv = 0
+        self.I_n = 0
+        self.cap_amort = 0
+        self.T = 0
+        self.int_D = 0
+        self.int_L = 0
+        self.PI_CA = 0
+        self.PI_KA = 0
+        self.del_D = 0
+        self.del_L = 0
+
     def produce(self):
         self.Y_r = np.sum(self.K_r)*self.mu_K*self.get_cap_util()
+        self.reset_variables()
+        self.cap_amort = sum(self.K_r*self.Pk)/self.kappa
+        self.W = sum(self.w)
+        self.uvc[0] = self.W/self.Y_r
+        self.uc[0] = (self.W + self.cap_amort)/self.Y_r
+        self.S = 0
+        self.inv[0], self.inv[1] = 0, self.inv[0]

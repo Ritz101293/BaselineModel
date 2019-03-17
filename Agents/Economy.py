@@ -273,6 +273,7 @@ class Economy:
             f_k.calc_desired_output()
             f_k.calc_labor_demand()
             f_k.set_price(w_e)
+            f_k.calc_credit_demand(w_e)
 
     def household_revise_wages(self):
         u_n = self.u_n
@@ -308,6 +309,9 @@ class Economy:
             f_c.produce()
         for f_k in self.firms_cap.values():
             f_k.produce()
+
+    def capital_market(self):
+        cgmkt.purchase_capital(self.firms_cons, self.firms_cap)
 
     def get_aggregate_tf_matrix(self):
         agents_dict = self.get_agents_dict()

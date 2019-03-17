@@ -26,32 +26,38 @@ def credit_interaction(firm_c, firm_k, bank, t):
     loan_req = bb.handle_loan_request
     for f_c in id_firm_c:
         fc_obj = firm_c[f_c]
-        chi = fc_obj.chi_c
-        s_choice = choose(id_bank, size=chi, replace=False)
-        i_list = array([bank[i].i_l for i in s_choice])
-        min_index = argmin(i_list)
-        i_new = i_list[min_index]
-        i_old = bank[fc_obj.id_bank_l[0]].i_l
-        if i_new < i_old:
-            p_s = getPs(fc_obj.epsilon_c, i_old, i_new)
-            I_s = choose([1, 0], size=1, replace=False, p=[p_s, 1 - p_s])[0]
-            if I_s == 1:
-                loan_req(fc_obj, bank[s_choice[min_index]], t)
+        if round(fc_obj.L_D) > 0:
+            chi = fc_obj.chi_c
+            s_choice = choose(id_bank, size=chi, replace=False)
+            i_list = array([bank[i].i_l for i in s_choice])
+            min_index = argmin(i_list)
+            i_new = i_list[min_index]
+            i_old = bank[fc_obj.id_bank_l[0]].i_l
+            if i_new < i_old:
+                p_s = getPs(fc_obj.epsilon_c, i_old, i_new)
+                I_s = choose([1, 0], size=1, replace=False, p=[p_s, 1 - p_s])[0]
+                if I_s == 1:
+                    loan_req(fc_obj, bank[s_choice[min_index]], t, 1)
+                else:
+                    loan_req(fc_obj, bank[fc_obj.id_bank_l[0]], t, 1)
             else:
-                loan_req(fc_obj, bank[fc_obj.id_bank_l[-1]], t)
+                loan_req(fc_obj, bank[fc_obj.id_bank_l[0]], t, 1)
 
     for f_k in id_firm_k:
         fk_obj = firm_k[f_k]
-        chi = fk_obj.chi_c
-        s_choice = choose(id_bank, size=chi, replace=False)
-        i_list = array([bank[i].i_l for i in s_choice])
-        min_index = argmin(i_list)
-        i_new = i_list[min_index]
-        i_old = bank[fk_obj.id_bank_l[0]].i_l
-        if i_new < i_old:
-            p_s = getPs(fk_obj.epsilon_c, i_old, i_new)
-            I_s = choose([1, 0], size=1, replace=False, p=[p_s, 1 - p_s])[0]
-            if I_s == 1:
-                loan_req(fk_obj, bank[s_choice[min_index]], t)
+        if round(fk_obj.chi_c) > 0:
+            chi = fk_obj.chi_c
+            s_choice = choose(id_bank, size=chi, replace=False)
+            i_list = array([bank[i].i_l for i in s_choice])
+            min_index = argmin(i_list)
+            i_new = i_list[min_index]
+            i_old = bank[fk_obj.id_bank_l[0]].i_l
+            if i_new < i_old:
+                p_s = getPs(fk_obj.epsilon_c, i_old, i_new)
+                I_s = choose([1, 0], size=1, replace=False, p=[p_s, 1 - p_s])[0]
+                if I_s == 1:
+                    loan_req(fk_obj, bank[s_choice[min_index]], t)
+                else:
+                    loan_req(fk_obj, bank[fk_obj.id_bank_l[0]], t)
             else:
-                loan_req(fk_obj, bank[fk_obj.id_bank_l[-1]], t)
+                loan_req(fk_obj, bank[fk_obj.id_bank_l[0]], t)

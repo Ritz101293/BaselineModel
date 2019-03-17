@@ -19,17 +19,22 @@ class Bank:
         self.id = 30000 + bid
         self.id_b = bid
 
-        # 1) Network variables
+        # Network Ids
         self.id_depositors = set()
         self.id_debtors = set()
-        # 2) Nominal variables
+        # Lag
+        self.prev_D = D
+        self.prev_L = L
+        self.prev_B = B
+        self.prev_R = R
+        self.prev_A = 0
+        # Finance
         self.PI = (L*INT[1]/(1 + MODEL[0])) + (B*INT[2]/(1 + MODEL[0])) - (D*INT[0]/(1 + MODEL[0]))
-        # 3) Desired variables
-        # 4) Real variables
-        # 5) Information variables
+        self.div = BANK[0]*(1 - tau_c)*((L*INT[1]/(1 + MODEL[0])) + (B*INT[2]/(1 + MODEL[0])) - (D*INT[0]/(1 + MODEL[0])))
+        # Efficiency
         self.LR = (-D + L + B + R)/L
         self.CR = R/D
-        # 6) Price, Interest variables
+        # Interest rates
         self.i_d = INT[0]
         self.i_l = INT[1]
         self.i_dprev = INT[0]
@@ -80,7 +85,25 @@ class Bank:
                     -self.del_L]
         return tf
 
+    def reset_variables(self):
+        self.PI = 0
+        self.div = 0
+
+        self.T = 0
+        self.int_D = 0
+        self.int_B = 0
+        self.int_L = 0
+        self.int_A = 0
+        self.PI_CA = 0
+        self.PI_KA = 0
+        self.del_D = 0
+        self.del_A = 0
+        self.del_R = 0
+        self.del_B = 0
+        self.del_L = 0
+
     def set_interest_rates(self, i_dbar, i_lbar, LR, CR):
+        self.reset_variables()
         self.i_dprev = self.i_d
         self.i_d = ut.update_variable(self.i_d, self.LR < LR)
 

@@ -55,6 +55,7 @@ for mc in range(MC):
         E.credit_market(t)
         E.labor_market()
         E.production()
+        E.capital_market()
         # DO some stuff!!!
         # tf_matrix[:, :, t, mc] = E.get_aggregate_tf_matrix()
         print("\t T = %d finished in %f seconds" % (t, time.time()-st_t))
