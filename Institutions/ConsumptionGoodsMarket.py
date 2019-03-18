@@ -11,4 +11,4 @@ import numpy as np
 
 
 def cgoods_interaction(households, firm_c):
-    
+    return 0

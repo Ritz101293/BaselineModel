@@ -45,7 +45,7 @@ def select_supplier(firm_c, firm_k):
     # return firm_c, firm_k
 
 
-def purchase_capital(firm_c, firm_k):
+def purchase_capital(firm_c, firm_k, banks):
     id_firm_c = np.array(list(firm_c.keys()))
 
     np.random.shuffle(id_firm_c)
@@ -58,16 +58,16 @@ def purchase_capital(firm_c, firm_k):
         supply = supplier_obj.Y_r - supplier_obj.S + supplier_obj.inv[1]
         if round(supply, 2) > 0:
             if supply >= demand:
-                transact(f_obj, demand, supplier_obj)
+                transact(f_obj, demand, supplier_obj, banks)
             else:
-                transact(f_obj, supply, supplier_obj)
+                transact(f_obj, supply, supplier_obj, banks)
         else:
             pass
 
     update_inventories(firm_k)
 
 
-def transact(fd, S, fs):
+def transact(fd, S, fs, banks):
     fcb.adjust_capital_batch(fd)
     pk = fs.Pk
 
@@ -78,6 +78,7 @@ def transact(fd, S, fs):
     fd.K[0] = fd.K_r[0]*fd.Pk[0]
 
     fs.S = fs.S + S
+    cb.deposit_transfer(fd, fs, banks, S*pk)
 
 
 def update_inventories(firm_k):

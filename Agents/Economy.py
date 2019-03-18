@@ -312,7 +312,7 @@ class Economy:
             f_k.produce()
 
     def capital_market(self):
-        cgmkt.purchase_capital(self.firms_cons, self.firms_cap)
+        cgmkt.purchase_capital(self.firms_cons, self.firms_cap, self.banks)
 
     def get_aggregate_tf_matrix(self):
         agents_dict = self.get_agents_dict()
