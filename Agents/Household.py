@@ -88,4 +88,12 @@ class Household:
             pass
 
     def calc_desired_consumption(self):
-        self.C_d = ((self.alpha_1*self.NI) + (self.alpha_2*self.get_net_worth()))/self.exp_Pc
+        self.C_D = ((self.alpha_1*self.NI) + (self.alpha_2*self.get_net_worth()))/self.exp_Pc
+        self.C_r = 0
+        self.NI = 0
+
+        self.C_n = 0
+        self.T = 0
+        self.int_D = 0
+        self.div = 0
+        self.del_D = 0

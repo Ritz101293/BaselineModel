@@ -21,6 +21,7 @@ from Agents.CentralBank import CentralBank as cb
 from Institutions import CapitalGoodsMarket as cgmkt
 from Institutions import CreditMarket as crmkt
 from Institutions import LaborMarket as lmkt
+from Institutions import ConsumptionGoodsMarket as cmkt
 from StatDept.Initializer import InitialValues as iv
 from StatDept.StatOffice import Aggregate as so_agg
 from Utils import Utils as ut
@@ -313,6 +314,9 @@ class Economy:
 
     def capital_market(self):
         cgmkt.purchase_capital(self.firms_cons, self.firms_cap, self.banks)
+
+    def consumption_market(self):
+        cmkt.cgoods_interaction(self.households, self.firms_cons, self.banks)
 
     def get_aggregate_tf_matrix(self):
         agents_dict = self.get_agents_dict()

@@ -7,13 +7,11 @@ Created on Wed Mar 13 17:54:26 2019
 """
 
 
-def pay_tax(h, g):
-    h.T = (h.w + h.int_D + h.div)*g.tau_h
-    g.T = g.T + h.T
-
-
 def consume(h, c, f):
     h.C_r = h.C_r + c
     h.C_n = h.C_n + c*f.Pc
+    h.id_firm_c = f.id
+
     f.S = f.S + c
     f.C = f.C + c*f.Pc
+    # print("household %d consumed %f out of %f from firm %d" % (h.id, h.C_r, h.C_D, f.id))
