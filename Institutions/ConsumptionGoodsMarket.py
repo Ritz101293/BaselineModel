@@ -13,6 +13,7 @@ import Behaviours.CommonBehaviour as cb
 import Behaviours.HouseholdBehaviour as hb
 
 
+#@profile
 def cgoods_interaction(households, firm_c, banks):
     h_ids = np.array(list(households.keys()))
     id_firm_c = np.array(list(firm_c.keys()))
@@ -22,47 +23,72 @@ def cgoods_interaction(households, firm_c, banks):
     array = np.array
     getPs = cb.get_switch_probability
     delete = np.delete
+    binom= np.random.binomial
     where = np.where
+    isin = np.isin
+    concat = np.concatenate
 
+    done_f = np.empty((0))
     np.random.shuffle(h_ids)
-    done_hh = []
-    while(len(done_hh) < len(h_ids) and len(id_firm_c) != 0):
+    while(len(id_firm_c) != 0 and len(h_ids) != 0):
+        done_hh = np.empty((0))
         for h in h_ids:
             h_obj = households[h]
-            if round(h_obj.C_D - h_obj.C_r, 2) > 0:
+            if h_obj.C_D - h_obj.C_r > 0:
                 f_obj = None
                 chi = h_obj.chi_c
                 f_choice = choose(id_firm_c, size=chi, replace=False) if len(id_firm_c) > chi else id_firm_c
                 P = array([firm_c[i].Pc for i in f_choice])
                 min_index = argmin(P)
-                P_new = P[min_index]
-                P_old = firm_c[h_obj.id_firm_c].Pc
-                if P_new < P_old:
-                    ps = getPs(h_obj.epsilon_c, P_old, P_new)
-                    I_s = choose([1, 0], size=1, replace=False, p=[ps, 1 - ps])[0]
-                    if I_s == 1:
-                        f_obj = firm_c[f_choice[min_index]]
-                        transact(h_obj, f_obj, id_firm_c, done_hh, banks, delete, where)
+                f_old = firm_c[h_obj.id_firm_c]
+                f_new = firm_c[f_choice[min_index]]
+                if (f_old.Y_r + f_old.inv[1] - f_old.S) > 0:
+                    P_new = P[min_index]
+                    P_old = f_old.Pc
+                    if P_new < P_old:
+                        ps = getPs(h_obj.epsilon_c, P_old, P_new)
+                        if binom(1, ps) == 1:
+                            f_obj = f_new
+                            if (f_obj.Y_r + f_obj.inv[1] - f_obj.S) > 0:
+                                h, f = transact(h_obj, f_obj, banks, delete, where)
+                                done_hh, done_f = append_el(h, f, done_hh, done_f, concat)
+                        else:
+                            f_obj = f_old
+                            h, f = transact(h_obj, f_obj, banks, delete, where)
+                            done_hh, done_f = append_el(h, f, done_hh, done_f, concat)
                     else:
-                        f_obj = firm_c[h_obj.id_firm_c]
-                        transact(h_obj, f_obj, id_firm_c, done_hh, banks, delete, where)
+                        f_obj = f_old
+                        h, f = transact(h_obj, f_obj, banks, delete, where)
+                        done_hh, done_f = append_el(h, f, done_hh, done_f, concat)
                 else:
-                    f_obj = firm_c[h_obj.id_firm_c]
-                    transact(h_obj, f_obj, id_firm_c, done_hh, banks, delete, where)
-        # print("%d households consumed from %d firms" % (len(done_hh), len(id_firm_c)))
-    h_ids = h_ids[~np.isin(h_ids, done_hh)]
+                    f_obj = f_new
+                    if (f_obj.Y_r + f_obj.inv[1] - f_obj.S) > 0:
+                        h, f = transact(h_obj, f_obj, banks, delete, where)
+                        done_hh, done_f = append_el(h, f, done_hh, done_f, concat)
+            if len(done_f) != 0:
+                id_firm_c = id_firm_c[~isin(id_firm_c, done_f)]
+        h_ids = h_ids[~isin(h_ids, done_hh)]
 
 
-def transact(h_obj, f_obj, id_firm_c, done_hh, banks, delete, where):
+def transact(h_obj, f_obj, banks, delete, where):
     demand = h_obj.C_D - h_obj.C_r
     supply = f_obj.Y_r + f_obj.inv[1] - f_obj.S
     if supply >= demand:
         hb.consume(h_obj, demand, f_obj)
         cb.deposit_transfer(h_obj, f_obj, banks, demand*f_obj.Pc)
-        done_hh.append(h_obj.id)
-        if round(supply - demand, 4) == 0:
-            id_firm_c = delete(id_firm_c, where(id_firm_c == f_obj.id)) 
+        return (h_obj.id, None)
+    elif supply == demand:
+        return (h_obj.id, f_obj.id)
     else:
         hb.consume(h_obj, supply, f_obj)
         cb.deposit_transfer(h_obj, f_obj, banks, supply*f_obj.Pc)
-        id_firm_c = delete(id_firm_c, where(id_firm_c == f_obj.id))
+        return (None, f_obj.id)
+
+
+def append_el(h, f, done_hh, done_f, concat):
+    if h is not None:
+            done_hh = concat((done_hh, [h]))
+    if f is not None:
+        if f not in done_f:
+            done_f = concat((done_f, [f]))
+    return done_hh, done_f

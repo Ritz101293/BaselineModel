@@ -36,5 +36,6 @@ def consumption_goods_market():
 
 
 st = time.time()
+
 consumption_goods_market()
 print("time taken: %f seconds" % (time.time() - st))

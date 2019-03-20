@@ -15,3 +15,4 @@ def consume(h, c, f):
     f.S = f.S + c
     f.C = f.C + c*f.Pc
     # print("household %d consumed %f out of %f from firm %d" % (h.id, h.C_r, h.C_D, f.id))
+    # v=input("Please enter to continue")

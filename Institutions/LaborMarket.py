@@ -12,7 +12,7 @@ import numpy as np
 import Utils.Utils as ut
 
 
-def labor_interaction(h_id, household, firm_c, firm_k, govt):
+def labor_interaction(h_id, id_firm_c, id_firm_k, household, firm_c, firm_k, govt):
     choose = np.random.choice
     isin = np.isin
     array = np.array
@@ -23,10 +23,10 @@ def labor_interaction(h_id, household, firm_c, firm_k, govt):
 
     h_id = govt_labor_interaction(govt, household, h_id, choose, add_el,
                                   delete, where)
-    h_id = firmc_labor_interaction(firm_c, household, h_id, choose, isin,
+    h_id = firmc_labor_interaction(firm_c, id_firm_c, household, h_id, choose, isin,
                                    array, argmin, add_el, delete, where)
 
-    h_id = firmk_labor_interaction(firm_k, household, h_id, choose, isin,
+    h_id = firmk_labor_interaction(firm_k, id_firm_k, household, h_id, choose, isin,
                                    array, argmin, add_el, delete, where)
 
 
@@ -49,11 +49,10 @@ def govt_labor_interaction(govt, household, h_id, choose, add_el,
         return h_id
 
 
-def firmc_labor_interaction(firm_c, household, h_id, choose, isin,
+def firmc_labor_interaction(firm_c, id_firm_c, household, h_id, choose, isin,
                             array, argmin, add_el, delete, where):
-    id_firm_c = np.array(list(firm_c.keys()))
-    id_firmc1 = choose(id_firm_c, size=round(len(id_firm_c)/2), replace=False)
-    id_firmc2 = id_firm_c[~isin(id_firm_c, id_firmc1)]
+    id_firmc1 = choose(id_firm_c, size=round(len(id_firm_c)/2), replace=False) if len(id_firm_c) > 1 else id_firm_c
+    id_firmc2 = id_firm_c[~isin(id_firm_c, id_firmc1)] if len(id_firm_c) > 1 else []
 
     for fc in id_firmc1:
         if len(h_id) != 0:
@@ -118,12 +117,10 @@ def firmc_labor_interaction(firm_c, household, h_id, choose, isin,
     return h_id
 
 
-def firmk_labor_interaction(firm_k, household, h_id, choose, isin,
+def firmk_labor_interaction(firm_k, id_firm_k, household, h_id, choose, isin,
                             array, argmin, add_el, delete, where):
-    id_firm_k = np.array(list(firm_k.keys()))
-
-    id_firmk1 = choose(id_firm_k, size=round(len(id_firm_k)/2), replace=False)
-    id_firmk2 = id_firm_k[~isin(id_firm_k, id_firmk1)]
+    id_firmk1 = choose(id_firm_k, size=round(len(id_firm_k)/2), replace=False) if len(id_firm_k) > 1 else id_firm_k
+    id_firmk2 = id_firm_k[~isin(id_firm_k, id_firmk1)]if len(id_firm_k) > 1 else []
 
     for fk in id_firmk1:
         if len(h_id) != 0:

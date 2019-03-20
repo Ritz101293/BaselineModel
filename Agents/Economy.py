@@ -303,7 +303,10 @@ class Economy:
 
     def labor_market(self):
         h_id = [h.id for h in self.households.values() if h.u_h != 0]
-        lmkt.labor_interaction(h_id, self.households, self.firms_cons,
+        fc_id = [fc.id for fc in self.firms_cons.values() if (fc.N_D - len(fc.id_workers)) > 0]
+        fk_id = [fk.id for fk in self.firms_cap.values() if (fk.N_D - len(fk.id_workers)) > 0]
+        lmkt.labor_interaction(h_id, np.array(fc_id), np.array(fk_id),
+                               self.households, self.firms_cons,
                                self.firms_cap, self.govt)
 
     def production(self):

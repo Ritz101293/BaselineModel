@@ -132,7 +132,7 @@ class FirmCons:
         self.exp_div = self.exp_div + self.lambda_e*(self.div - self.exp_div)
 
     def calc_desired_output(self):
-        self.Y_D = self.exp_S*(1 + self.nu) - self.inv[0]
+        self.Y_D = round(self.exp_S*(1 + self.nu) - self.inv[0], 4)
 
     def get_desired_cap_util(self):
         self.u_D = min(1, self.Y_D/(self.mu_K*np.sum(self.K_r)))
