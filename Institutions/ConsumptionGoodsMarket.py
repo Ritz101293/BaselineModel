@@ -69,6 +69,8 @@ def cgoods_interaction(households, firm_c, banks):
                 id_firm_c = id_firm_c[~isin(id_firm_c, done_f)]
         h_ids = h_ids[~isin(h_ids, done_hh)]
 
+    update_inventories(firm_c)
+
 
 def transact(h_obj, f_obj, banks, delete, where):
     demand = h_obj.C_D - h_obj.C_r
@@ -92,3 +94,9 @@ def append_el(h, f, done_hh, done_f, concat):
         if f not in done_f:
             done_f = concat((done_f, [f]))
     return done_hh, done_f
+
+
+def update_inventories(firm_c):
+    for fc in firm_c.values():
+        fc.inv[0] = fc.Y_D + fc.inv[1] - fc.S
+        fc.CG_inv = fc.inv[0]*fc.uc[0] - fc.inv[1]*fc.uc[1]

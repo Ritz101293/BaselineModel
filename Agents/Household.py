@@ -8,9 +8,6 @@ Created on Fri Mar  8 20:21:57 2019
 
 
 import numpy as np
-from scipy.stats import foldnorm as FN
-
-from Utils import Utils as ut
 
 
 class Household:
@@ -32,11 +29,11 @@ class Household:
         # Price
         self.Pc = Pc
         # Labor
-        self.u_h = 1
+        self.u_h = np.array([1]*4)
         self.u_bar = MODEL[1]
         self.w_bar = MODEL[2]
         # Finance
-        self.prev_D = D
+        self.prev_D = 0
 
         # Balance sheet variables
         self.D = D
@@ -68,6 +65,7 @@ class Household:
         return self.D
 
     def get_balance_sheet(self):
+        self.prev_D = self.D
         return np.array([self.D, 0, 0, 0, 0, 0, 0, self.get_net_worth()])
 
     def get_tf_matrix(self):
@@ -79,10 +77,11 @@ class Household:
         self.exp_Pc = self.exp_Pc + self.lambda_e*(self.Pc - self.exp_Pc)
 
     def revise_wage(self, u_n):
-        fn = FN.rvs(0, loc=0, scale=0.0094)
-        if self.u_h > 2:
+        fn = abs(np.random.normal(0, 0.0094))
+        sum_u = np.sum(self.u_h)
+        if sum_u > 2:
             self.w_bar = self.w_bar*(1 - fn)
-        elif (self.u_h <= 2 and u_n <= self.u_bar):
+        elif (sum_u <= 2 and u_n <= self.u_bar):
             self.w_bar = self.w_bar*(1 + fn)
         else:
             pass
@@ -95,5 +94,11 @@ class Household:
         self.C_n = 0
         self.T = 0
         self.int_D = 0
-        self.div = 0
+        # self.div = 0
         self.del_D = 0
+
+    def calc_income_taxes(self, tau):
+        t_inc = self.w + self.int_D + self.div if self.u_h[0] == 0 else self.int_D + self.div
+        self.T = tau*t_inc
+        self.NI = t_inc - self.T if self.u_h[0] == 0 else t_inc + self.dole - self.T
+        self.div = 0

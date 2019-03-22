@@ -22,10 +22,12 @@ class Govt:
         # 5) Information variables
         # 6) Price, Interest variables
         self.Pb = GCB[2]
+        self.i_b = INT[2]
         self.tau_h = TAX[0]
         self.tau_c = TAX[1]
         self.id_workers = np.array([-1]*GCB[0])
         self.UN = GCB[4]
+        self.prev_B = 0
 
         # Balance sheet variables
         self.B = B
@@ -46,9 +48,19 @@ class Govt:
         return -self.B
 
     def get_balance_sheet(self):
+        self.prev_B = self.B
         return np.array([0, 0, 0, 0, -self.B, 0, 0, self.get_net_worth()])
 
     def get_tf_matrix(self):
         return np.array([0, -self.W, -self.dole, 0, 0, 0, self.T, 0,
                          -self.int_B, 0, 0, 0, self.PI_cb, 0, 0, 0,
                          self.del_B, 0])
+
+    def reset_variables(self):
+        self.W = 0
+        self.dole = 0
+        self.T = 0
+        self.int_B = 0
+        self.PI_cb = 0
+        self.del_B = 0
+

@@ -80,10 +80,6 @@ def transact(fd, S, fs, banks):
 
 
 def update_inventories(firm_k):
-    id_firm_k = np.array(list(firm_k.keys()))
-    for f_k in id_firm_k:
-        f_obj = firm_k[f_k]
-        if f_obj.Y_r >= f_obj.S:
-            f_obj.inv[0] = f_obj.Y_r - f_obj.S
-        else:
-            f_obj.inv[0] = f_obj.inv[1] - f_obj.S
+    for f_k in firm_k.values():
+        f_k.inv[0] = f_k.inv[1] + f_k.Y_r - f_k.S
+        f_k.CG_inv = f_k.inv[0]*f_k.uc[0] - f_k.inv[1]*f_k.uc[1]

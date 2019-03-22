@@ -22,6 +22,7 @@ from Institutions import CapitalGoodsMarket as cgmkt
 from Institutions import CreditMarket as crmkt
 from Institutions import LaborMarket as lmkt
 from Institutions import ConsumptionGoodsMarket as cmkt
+from Institutions import PaymentObligations as payobs
 from StatDept.Initializer import InitialValues as iv
 from StatDept.StatOffice import Aggregate as so_agg
 from Utils import Utils as ut
@@ -55,6 +56,7 @@ class Economy:
         g_ss = MODEL[0]
         kappa = MODEL[3]
         eta = MODEL[4]
+        SIZE = self.param[3]
 
         C_r = self.param[0]
         TAX = self.param[2]
@@ -65,10 +67,10 @@ class Economy:
         BANK = self.param[8]
         GCB = self.param[9]
 
-        size_h = self.param[3][0]
-        size_fc = self.param[3][1]
-        size_fk = self.param[3][2]
-        size_b = self.param[3][3]
+        size_h = SIZE[0]
+        size_fc = SIZE[1]
+        size_fk = SIZE[2]
+        size_b = SIZE[3]
 
         Pc = FC[16]
         Pk = FK[12]
@@ -110,7 +112,7 @@ class Economy:
             self.firms_cap[20000 + i] = firm_cap
 
         for i in range(size_b):
-            bank = b(Db, Lb, Bb, Rb, BANK, INT, MODEL, TAX[1], size_b, i)
+            bank = b(Db, Lb, Bb, Rb, BANK, INT, MODEL, TAX[1], SIZE, i)
             self.banks[30000 + i] = bank
 
         UN = int(size_h - (FC[0] + FK[0] + GCB[0]))
@@ -133,7 +135,7 @@ class Economy:
         tau = self.govt.tau_h
         g = 1 + self.param[4][0]
         for h in self.households.values():
-            if h.u_h > 0:
+            if h.u_h[0] == 1:
                 h.dole = omega*h.w_bar
                 h.T = tau*((h.int_D + h.div)/g)
                 h.NI = h.dole + (h.int_D + h.div)/g - h.T
@@ -151,7 +153,7 @@ class Economy:
                 h = getObj(h1)
                 h.id_firm = 10000 + n1
                 h.w = self.param[4][2]
-                h.u_h = 0
+                h.u_h = np.array([0]*4)
                 c = c + 1
 
         for n2 in range(len(N2)):
@@ -162,7 +164,7 @@ class Economy:
                 h = getObj(h1)
                 h.id_firm = 10000 + n2
                 h.w = self.param[4][2]
-                h.u_h = 0
+                h.u_h = np.array([0]*4)
                 c = c + 1
         c = 0
         for n3 in N3:
@@ -170,26 +172,27 @@ class Economy:
             h = getObj(n3)
             h.id_firm = -1
             h.w = self.param[4][2]
-            h.u_h = 0
+            h.u_h = np.array([0]*4)
             c = c + 1
 
     def create_deposit_network(self, BD):
         getObj = self.getObjectById
+        concat = np.concatenate
         for i in range(len(BD)):
             b = getObj(30000 + i)
             for d in BD[i]:
-                b.id_depositors.add(d)
+                b.id_depositors = concat(([d], b.id_depositors))
                 dp = getObj(d)
                 dp.id_bank_d = 30000 + i
 
     def create_credit_network(self, BC):
         getObj = self.getObjectById
         for i in range(len(BC)):
-            b = getObj(30000 + i)
-            for d in BC[i]:
-                b.id_debtors.add(d)
-                ln = getObj(d)
-                ln.id_bank_l = dq([30000 + i]*20, maxlen=20)
+            # b = getObj(30000 + i)
+            for c in BC[i]:
+                # b.id_debtors.add(c)
+                ln = getObj(c)
+                ln.id_bank_l = np.array([30000 + i]*ln.eta)
 
     def create_capital_network(self, KC):
         getObj = self.getObjectById
@@ -228,7 +231,7 @@ class Economy:
         c = 0
         for h in self.households.values():
             w = w + h.w
-            if h.u_h == 0:
+            if h.u_h[0] == 0:
                 c = c + 1
         self.w_bar = w/c
 
@@ -244,7 +247,12 @@ class Economy:
         self.i_dbar = i_d/self.param[3][3]
         self.i_lbar = i_l/self.param[3][3]
 
+    def reset_govt_cb_variables(self):
+        self.govt.reset_variables()
+        self.central_bank.reset_variables()
+
     def calc_prev_statistics(self):
+        self.reset_govt_cb_variables()
         self.calc_average_wage()
         self.calc_average_banking_variables()
 
@@ -310,15 +318,35 @@ class Economy:
 
     def credit_market(self, t):
         crmkt.credit_interaction(self.firms_cons,
-                                 self.firms_cap, self.banks, t)
+                                 self.firms_cap, self.banks)
 
     def labor_market(self):
-        h_id = [h.id for h in self.households.values() if h.u_h != 0]
-        fc_id = [fc.id for fc in self.firms_cons.values() if (fc.N_D - len(fc.id_workers)) > 0]
-        fk_id = [fk.id for fk in self.firms_cap.values() if (fk.N_D - len(fk.id_workers)) > 0]
+        households = self.households
+        firm_c = self.firms_cons
+        firm_k = self.firms_cap
+        govt = self.govt
+        h_id = [h.id for h in households.values() if h.u_h[0] == 1]
+        fc_id = [fc.id for fc in firm_c.values() if (fc.N_D - len(fc.id_workers)) > 0]
+        fk_id = [fk.id for fk in firm_k.values() if (fk.N_D - len(fk.id_workers)) > 0]
         lmkt.labor_interaction(h_id, np.array(fc_id), np.array(fk_id),
-                               self.households, self.firms_cons,
-                               self.firms_cap, self.govt)
+                               households, firm_c, firm_k, govt)
+
+        for f_c in firm_c.values():
+            wkrs = f_c.id_workers
+            wl = len(wkrs)
+            for i in range(wl):
+                f_c.w[i] = households[wkrs[i]].w_bar
+
+        for f_k in firm_k.values():
+            wkrs = f_c.id_workers
+            wl = len(wkrs)
+            for i in range(wl):
+                f_k.w[i] = households[wkrs[i]].w_bar
+
+        wkrs = govt.id_workers
+        wl = len(wkrs)
+        for i in range(wl):
+            govt.w[i] = households[wkrs[i]].w_bar
 
     def production(self):
         for f_c in self.firms_cons.values():
@@ -331,6 +359,72 @@ class Economy:
 
     def consumption_market(self):
         cmkt.cgoods_interaction(self.households, self.firms_cons, self.banks)
+
+    def payment_settlement(self):
+        banks = self.banks
+        households = self.households
+        firm_cons = self.firms_cons
+        firm_cap = self.firms_cap
+        for f_c in self.firms_cons.values():
+            payobs.loan_payments(f_c, banks)
+            payobs.wage_payments(f_c, households, banks)
+
+        for f_k in self.firms_cap.values():
+            payobs.loan_payments(f_k, banks)
+            payobs.wage_payments(f_k, households, banks)
+
+        cb = self.central_bank
+        govt = self.govt
+        payobs.wage_dole_payments_g(govt, households, banks, self.w_bar)
+
+        for b_k in banks.values():
+            payobs.bond_payments(b_k, govt, cb)
+            payobs.cash_advance_payments(b_k, cb)
+            depositors = b_k.id_depositors
+            for dep in depositors:
+                if dep//10000 == 0:
+                    payobs.deposit_interest(b_k, households[dep])
+                elif dep//10000 == 1:
+                    payobs.deposit_interest(b_k, firm_cons[dep])
+                elif dep//10000 == 2:
+                    payobs.deposit_interest(b_k, firm_cap[dep])
+                else:
+                    print("Not possible!")
+                    pass
+
+        payobs.bond_payments_cb(cb, govt)
+
+    def profits_taxes_dividends(self):
+        households = self.households
+        govt = self.govt
+        banks = self.banks
+        h_NW = 0
+        div_T = 0
+
+        for f_c in self.firms_cons.values():
+            f_c.calc_profit_taxes_dividends(govt.tau_c)
+            payobs.pay_taxes(f_c, govt, banks)
+            payobs.pay_dividends(f_c, banks)
+            div_T = div_T + f_c.div
+
+        for f_k in self.firms_cap.values():
+            f_k.calc_profit_taxes_dividends(govt.tau_c)
+            payobs.pay_taxes(f_k, govt, banks)
+            payobs.pay_dividends(f_k, banks)
+            div_T = div_T + f_k.div
+
+        for bk in banks.values():
+            bk.calc_profit_taxes_dividends(govt.tau_c)
+            payobs.pay_taxes(bk, govt, None)
+            payobs.pay_dividends_b(bk)
+            div_T = div_T + bk.div
+
+        for h in households.values():
+            h.calc_income_taxes(govt.tau_h)
+            payobs.pay_taxes(h, govt, banks)
+            h_NW = h_NW + h.D
+
+        payobs.receive_dividends(households, banks, h_NW, div_T)
 
     def get_aggregate_tf_matrix(self):
         agents_dict = self.get_agents_dict()

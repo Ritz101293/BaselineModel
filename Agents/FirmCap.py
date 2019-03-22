@@ -21,7 +21,7 @@ class FirmCap:
 
         eta = MODEL[4]
         # Network Ids
-        self.id_bank_l = np.array([-1]*eta)
+        self.id_bank_l = np.empty((0))
         self.id_workers = np.array([-1]*round(FK[0]/size_fk))
         self.id_bank_d = 0
         # Output & Sales
@@ -39,14 +39,14 @@ class FirmCap:
         self.Pk = FK[12]
         # Credit
         self.L_D = L[0]
-        self.L_r = np.array([L[0]]*eta)
-        self.prev_L = sum(L)
+        self.L_r = np.array([L[0]/(1 + MODEL[0])**i for i in range(eta)])
+        self.prev_L = 0
         self.i_l = np.array([INT[1]]*eta)
         # Finance
         self.PI = FK[15]/size_fk
         self.OCF = FK[18]/size_fk
         self.div = (FK[15] - FK[16])*FK[2]/size_fk
-        self.prev_D = D
+        self.prev_D = 0
         # Efficiency
         self.mu_N = FK[10]
 
@@ -77,6 +77,7 @@ class FirmCap:
         self.chi_c = FK[7]
         self.epsilon_d = FK[8]
         self.epsilon_c = FK[9]
+        self.eta = eta
 
         # Expectation variables
         self.exp_S = FK[14]/size_fk
@@ -88,6 +89,8 @@ class FirmCap:
         return self.D - np.sum(self.L) + self.K
 
     def get_balance_sheet(self):
+        self.prev_D = self.D
+        self.prev_L = np.sum(self.L)
         return np.array([self.D, -np.sum(self.L), 0, self.K,
                          0, 0, 0, self.get_net_worth()])
 
@@ -146,3 +149,10 @@ class FirmCap:
         self.uc[0] = self.W/self.Y_r
         self.S = 0
         self.inv[0], self.inv[1] = 0, self.inv[0]
+
+    def calc_profit_taxes_dividends(self, tau):
+        self.PI = self.Y_n - self.W + self.CG_inv + self.int_D - self.int_L
+        self.T = self.PI*tau
+        self.PI_CA = self.PI - self.T
+        self.PI_KA = self.PI_CA*(1 - self.rho)
+        self.div = self.PI_CA - self.PI_KA

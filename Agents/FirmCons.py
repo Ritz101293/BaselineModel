@@ -22,7 +22,7 @@ class FirmCons:
         kappa = MODEL[3]
         eta = MODEL[4]
         # Network Ids
-        self.id_bank_l = np.array([-1]*eta)
+        self.id_bank_l = np.empty((0))
         self.id_workers = np.array([-1]*round(FC[0]/size_fc))
         self.id_firm_cap = 0
         self.id_bank_d = 0
@@ -46,19 +46,19 @@ class FirmCons:
         self.I_rD = Yk/size_fc
         self.I_nD = Yk*Pk/size_fc
         self.I_r = Yk/size_fc
-        self.prev_K = sum(K)
+        self.prev_K = 0
         # Credit
         self.L_D = L[0]
-        self.L_r = np.array([L[0]]*eta)
+        self.L_r = np.array([L[0]/(1 + MODEL[0])**i for i in range(eta)])
         self.i_l = np.array([INT[1]]*eta)
-        self.prev_L = sum(L)
+        self.prev_L = 0
         # Finance
         self.PI = FC[18]/size_fc
         self.div = (FC[18] - FC[19])*FC[2]/size_fc
         self.OCF = FC[22]/size_fc
         self.r = FC[22]/(size_fc*np.sum(K))
         self.r_bar = FC[22]/(size_fc*np.sum(K))
-        self.prev_D = D
+        self.prev_D = 0
         # Efficiency
         self.u_D = MODEL[8]
         self.u = MODEL[8]
@@ -113,6 +113,9 @@ class FirmCons:
         return self.D - np.sum(self.L) + self.C + np.sum(self.K)
 
     def get_balance_sheet(self):
+        self.prev_D = self.D
+        self.prev_L = np.sum(self.L)
+        self.prev_K = np.sum(self.K)
         return np.array([self.D, -np.sum(self.L), self.C, np.sum(self.K),
                          0, 0, 0, self.get_net_worth()])
 
@@ -193,3 +196,10 @@ class FirmCons:
         self.uc[0] = (self.W + self.cap_amort)/self.Y_r
         self.S = 0
         self.inv[0], self.inv[1] = 0, self.inv[0]
+
+    def calc_profit_taxes_dividends(self, tau):
+        self.PI = self.Y_n - self.W + self.CG_inv - self.cap_amort + self.int_D - self.int_L
+        self.T = self.PI*tau
+        self.PI_CA = self.PI - self.T
+        self.PI_KA = self.PI_CA*(1 - self.rho)
+        self.div = self.PI_CA - self.PI_KA

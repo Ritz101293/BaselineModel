@@ -18,8 +18,11 @@ class CentralBank:
         # 3) Desired variables
         # 4) Real variables
         # 5) Information variables
+        self.prev_B = 0
+        self.prev_R = 0
+        self.prev_A = 0
         # 6) Price, Interest variables
-        self.i_A = INT[3]
+        self.i_a = INT[3]
 
         # Balance sheet variables
         self.B = B
@@ -44,6 +47,9 @@ class CentralBank:
         return self.B - self.R + self.A
 
     def get_balance_sheet(self):
+        self.prev_B = self.B
+        self.prev_R = self.R
+        self.prev_A = self.A
         return np.array([0, 0, 0, 0, self.B, -self.R, self.A,
                          self.get_net_worth()])
 
@@ -54,3 +60,15 @@ class CentralBank:
         tf[:, 1] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     -self.del_A, self.del_R, -self.del_B, 0]
         return tf
+
+    def reset_variables(self):
+        self.int_B = 0
+        self.int_R = 0
+        self.int_A = 0
+        self.PI_cb = 0
+        self.del_R = 0
+        self.del_B = 0
+        self.del_A = 0
+
+    def calc_profit(self):
+        self.PI_cb = self.int_B + self.int_A - self.int_R

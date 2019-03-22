@@ -14,7 +14,7 @@ import Behaviours.CommonBehaviour as cb
 import Behaviours.BankBehaviour as bb
 
 
-def credit_interaction(firm_c, firm_k, bank, t):
+def credit_interaction(firm_c, firm_k, bank):
     id_firm_c = np.array(list(firm_c.keys()))
     id_firm_k = np.array(list(firm_k.keys()))
     id_bank = np.array(list(bank.keys()))
@@ -38,11 +38,11 @@ def credit_interaction(firm_c, firm_k, bank, t):
             if i_new < i_old:
                 p_s = getPs(fc_obj.epsilon_c, i_old, i_new)
                 if binom(1, p_s) == 1:
-                    loan_req(fc_obj, bank[s_choice[min_index]], t, 1)
+                    loan_req(fc_obj, bank[s_choice[min_index]], 1)
                 else:
-                    loan_req(fc_obj, bank[fc_obj.id_bank_l[0]], t, 1)
+                    loan_req(fc_obj, bank[fc_obj.id_bank_l[0]], 1)
             else:
-                loan_req(fc_obj, bank[fc_obj.id_bank_l[0]], t, 1)
+                loan_req(fc_obj, bank[fc_obj.id_bank_l[0]], 1)
 
     for f_k in id_firm_k:
         fk_obj = firm_k[f_k]
@@ -56,8 +56,8 @@ def credit_interaction(firm_c, firm_k, bank, t):
             if i_new < i_old:
                 p_s = getPs(fk_obj.epsilon_c, i_old, i_new)
                 if binom(1, p_s) == 1:
-                    loan_req(fk_obj, bank[s_choice[min_index]], t)
+                    loan_req(fk_obj, bank[s_choice[min_index]])
                 else:
-                    loan_req(fk_obj, bank[fk_obj.id_bank_l[0]], t)
+                    loan_req(fk_obj, bank[fk_obj.id_bank_l[0]])
             else:
-                loan_req(fk_obj, bank[fk_obj.id_bank_l[0]], t)
+                loan_req(fk_obj, bank[fk_obj.id_bank_l[0]])

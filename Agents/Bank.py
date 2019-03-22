@@ -14,14 +14,14 @@ from Utils import Utils as ut
 
 class Bank:
 
-    def __init__(self, D, L, B, R, BANK, INT, MODEL, tau_c, size_b, bid):
+    def __init__(self, D, L, B, R, BANK, INT, MODEL, tau_c, SIZE, bid):
         # Identity variables
         self.id = 30000 + bid
         self.id_b = bid
 
         # Network Ids
-        self.id_depositors = set()
-        self.id_debtors = set()
+        self.id_depositors = np.empty((0))
+        # self.id_debtors = set()
         # Lag
         self.prev_D = D
         self.prev_L = L
@@ -70,6 +70,11 @@ class Bank:
 
     # BEHAVIOUR OF BANK
     def get_net_worth(self):
+        self.prev_D = self.D
+        self.prev_L = self.L
+        self.prev_B = self.B
+        self.prev_R = self.R
+        self.prev_A = self.A
         return -self.D + self.L + self.B + self.R - self.A
 
     def get_balance_sheet(self):
@@ -109,3 +114,10 @@ class Bank:
 
         self.i_lprev = self.i_l
         self.i_l = ut.update_variable(self.i_l, self.CR < CR)
+
+    def calc_profit_taxes_dividends(self, tau):
+        self.PI = self.int_B + self.int_L - self.int_D - self.int_A
+        self.T = self.PI*tau
+        self.PI_CA = self.PI - self.T
+        self.PI_KA = self.PI_CA*(1 - self.rho)
+        self.div = self.PI_CA - self.PI_KA

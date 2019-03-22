@@ -20,7 +20,7 @@ def get_default_probability(OCF, ds, zeta):
     return (1/(1 + math.exp((OCF - zeta*ds)/ds)))
 
 
-def handle_loan_request(f_obj, b_obj, t, firm_c=0):
+def handle_loan_request(f_obj, b_obj, firm_c=0):
     Ld = f_obj.L_D
     i_l = b_obj.i_l
     eta = b_obj.eta
@@ -32,23 +32,17 @@ def handle_loan_request(f_obj, b_obj, t, firm_c=0):
     alpha = 1/eta
     exp_PI = get_expected_profit(pd, delta, Ld, count, alpha, i_l)
     if exp_PI >= 0:
-        if t > 1:
-            b_obj.L = b_obj.L + Ld
-            b_obj.id_debtors.add(f_obj.id)
-            f_obj.id_bank_l = ut.add_element(b_obj.id, f_obj.id_bank_l)
-            f_obj.L_r = ut.add_element(Ld, f_obj.L_r)
-            f_obj.L = ut.add_element(Ld, f_obj.L)
-            f_obj.i_l = ut.add_element(i_l, f_obj.i_l)
-        else:
-            handle_credit_at_T1(b_obj, Ld, f_obj, i_l)
+        b_obj.L = b_obj.L + Ld
+        # b_obj.id_debtors.add(f_obj.id)
+        f_obj.id_bank_l = ut.add_element(b_obj.id, f_obj.id_bank_l)
+        f_obj.L_r = ut.add_element(Ld, f_obj.L_r)
+        f_obj.L = ut.add_element(Ld, f_obj.L)
+        f_obj.i_l = ut.add_element(i_l, f_obj.i_l)
     else:
-        if t > 1:
-            f_obj.id_bank_l = ut.add_element(-1, f_obj.id_bank_l)
-            f_obj.L_r = ut.add_element(0, f_obj.L_r)
-            f_obj.L = ut.add_element(0, f_obj.L)
-            f_obj.i_l = ut.add_element(0, f_obj.L_r)
-        else:
-            handle_credit_at_T1(b_obj, Ld, f_obj, i_l, 0)
+        f_obj.id_bank_l = ut.add_element(-1, f_obj.id_bank_l)
+        f_obj.L_r = ut.add_element(0, f_obj.L_r)
+        f_obj.L = ut.add_element(0, f_obj.L)
+        f_obj.i_l = ut.add_element(0, f_obj.L_r)
 
 
 def get_expected_profit(pd, delta, Ld, count, alpha, i_l):
@@ -60,17 +54,17 @@ def get_expected_profit(pd, delta, Ld, count, alpha, i_l):
         return del_e + (1 - pd)*(i_l*Ld*0.5*eta*(2 - alpha*eta + alpha))
 
 
-def handle_credit_at_T1(b_obj, Ld, f_obj, i_l, flag=1):
-    paid = f_obj.L[-1]
-    if flag == 1:
-        b_obj.L = b_obj.L + Ld - paid
-        f_obj.id_bank_l[0] = b_obj.id
-        f_obj.L_r[0] = Ld
-        f_obj.L[0] = Ld
-        f_obj.i_l[0] = i_l
-    else:
-        b_obj.L = b_obj.L - paid
-        f_obj.id_bank_l[0] = -1
-        f_obj.L_r[0] = 0
-        f_obj.L[0] = 0
-        f_obj.i_l[0] = 0
+# def handle_credit_at_T1(b_obj, Ld, f_obj, i_l, flag=1):
+#     paid = f_obj.L[-1]
+#     if flag == 1:
+#         b_obj.L = b_obj.L + Ld - paid
+#         f_obj.id_bank_l[0] = b_obj.id
+#         f_obj.L_r[0] = Ld
+#         f_obj.L[0] = Ld
+#         f_obj.i_l[0] = i_l
+#     else:
+#         b_obj.L = b_obj.L - paid
+#         f_obj.id_bank_l[0] = -1
+#         f_obj.L_r[0] = 0
+#         f_obj.L[0] = 0
+#         f_obj.i_l[0] = 0
