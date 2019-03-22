@@ -98,5 +98,6 @@ def append_el(h, f, done_hh, done_f, concat):
 
 def update_inventories(firm_c):
     for fc in firm_c.values():
+        fc.Y_n = fc.S*fc.Pc
         fc.inv[0] = fc.Y_D + fc.inv[1] - fc.S
         fc.CG_inv = fc.inv[0]*fc.uc[0] - fc.inv[1]*fc.uc[1]

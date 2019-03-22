@@ -81,5 +81,6 @@ def transact(fd, S, fs, banks):
 
 def update_inventories(firm_k):
     for f_k in firm_k.values():
+        f_k.Y_n = f_k.S*f_k.Pk
         f_k.inv[0] = f_k.inv[1] + f_k.Y_r - f_k.S
         f_k.CG_inv = f_k.inv[0]*f_k.uc[0] - f_k.inv[1]*f_k.uc[1]
