@@ -262,11 +262,22 @@ class Economy:
         for f_k in self.firms_cap.values():
             f_k.form_expectations()
 
-    def production_labor_prices(self):
+    def fire_extra_labor(self, f_obj, v):
+        w = f_obj.id_workers
+        for h in range(v):
+            hid = np.random.randint(low=0, high=len(w), size=1)[0]
+            self.households[hid].id_firm = 0
+            w = np.delete(w, hid)
+        f_obj.id_workers = w
+
+    def production_labor_prices_credit(self):
         w_e = self.exp_wbar
         for f_c in self.firms_cons.values():
             f_c.calc_desired_output()
             f_c.calc_labor_demand()
+
+            if (len(f_c.id_workers) - f_c.N_D) > 0:
+                self.fire_extra_labor(f_c, len(f_c.id_workers) - f_c.N_D)
             f_c.set_price(w_e)
             f_c.calc_credit_demand(w_e)
 

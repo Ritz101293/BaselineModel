@@ -47,7 +47,7 @@ for mc in range(MC):
         E.calc_prev_statistics()
         balance_sheet[:, :, t, mc] = E.get_aggregate_bal_sheet()
         E.form_expectation()
-        E.production_labor_prices()
+        E.production_labor_prices_credit()
         E.household_revise_wages_consumption()
         E.set_interest_rates()
         E.calc_investment_demand()
@@ -58,7 +58,7 @@ for mc in range(MC):
         print("Labor mkt took %f seconds" % (time.time()-stlm))
         E.production()
         E.capital_market()
-        stcm=time.time()
+        stcm = time.time()
         E.consumption_market()
         print("consumption mkt took %f seconds" % (time.time()-stcm))
         # DO some stuff!!!
