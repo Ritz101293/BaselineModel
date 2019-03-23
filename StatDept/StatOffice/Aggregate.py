@@ -9,31 +9,31 @@ Created on Thu Mar 14 19:03:37 2019
 
 import numpy as np
 
-
-def get_tf_matrix(agents):
+#@profile
+def get_tf_matrix(agents, t):
     tf = np.zeros((18, 10))
 
     for h in agents[0].values():
-        tf[:, 0] = tf[:, 0] + h.get_tf_matrix()
+        tf[:, 0] = tf[:, 0] + h.get_tf_matrix(t)
 
     for f_c in agents[1].values():
-        tf_fc = f_c.get_tf_matrix()
+        tf_fc = f_c.get_tf_matrix(t)
         tf[:, 1] = tf[:, 1] + tf_fc[:, 0]
         tf[:, 2] = tf[:, 2] + tf_fc[:, 1]
 
     for f_k in agents[2].values():
-        tf_fk = f_k.get_tf_matrix()
+        tf_fk = f_k.get_tf_matrix(t)
         tf[:, 3] = tf[:, 3] + tf_fk[:, 0]
         tf[:, 4] = tf[:, 4] + tf_fk[:, 1]
 
     for bk in agents[3].values():
-        tf_b = bk.get_tf_matrix()
+        tf_b = bk.get_tf_matrix(t)
         tf[:, 5] = tf[:, 5] + tf_b[:, 0]
         tf[:, 6] = tf[:, 6] + tf_b[:, 1]
 
     tf[:, 7] = agents[4].get_tf_matrix()
 
-    tf_cb = agents[5].get_tf_matrix()
+    tf_cb = agents[5].get_tf_matrix(t)
     tf[:, 8] = tf_cb[:, 0]
     tf[:, 9] = tf_cb[:, 1]
 

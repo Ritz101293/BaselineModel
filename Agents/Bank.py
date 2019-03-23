@@ -81,9 +81,15 @@ class Bank:
         return np.array([-self.D, self.L, 0, 0, self.B, self.R, -self.A,
                          self.get_net_worth()])
 
-    def get_tf_matrix(self):
+    def get_tf_matrix(self, t):
+        if t > 0:
+            self.del_D = self.D - self.prev_D
+            self.del_L = self.L - self.prev_L
+            self.del_R = self.R - self.prev_R
+            self.del_A = self.A - self.prev_A
+            self.del_B = self.B - self.prev_B
         tf = np.zeros((18, 2))
-        tf[:, 0] = [0, 0, 0, 0, 0, 0, -self.T, -self.del_D, self.int_B,
+        tf[:, 0] = [0, 0, 0, 0, 0, 0, -self.T, -self.int_D, self.int_B,
                     self.int_L, 0, -self.PI_CA, 0, 0, 0, 0, 0, 0]
         tf[:, 1] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, self.PI_KA, 0,
                     self.del_D, self.del_A, -self.del_R, -self.del_B,

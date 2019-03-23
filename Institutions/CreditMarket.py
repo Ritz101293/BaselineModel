@@ -19,7 +19,7 @@ def credit_interaction(firm_c, firm_k, bank):
     id_firm_k = np.array(list(firm_k.keys()))
     id_bank = np.array(list(bank.keys()))
 
-    choose = np.random.choice
+    # choose = np.random.choice
     array = np.array
     argmin = np.argmin
     binom = np.random.binomial
@@ -30,7 +30,7 @@ def credit_interaction(firm_c, firm_k, bank):
         fc_obj = firm_c[f_c]
         if round(fc_obj.L_D) > 0:
             chi = fc_obj.chi_c
-            s_choice = choose(id_bank, size=chi, replace=False)
+            s_choice = ut.draw_sample(id_bank, chi)
             i_list = array([bank[i].i_l for i in s_choice])
             min_index = argmin(i_list)
             i_new = i_list[min_index]
@@ -48,7 +48,7 @@ def credit_interaction(firm_c, firm_k, bank):
         fk_obj = firm_k[f_k]
         if round(fk_obj.chi_c) > 0:
             chi = fk_obj.chi_c
-            s_choice = choose(id_bank, size=chi, replace=False)
+            s_choice = ut.draw_sample(id_bank, chi)
             i_list = array([bank[i].i_l for i in s_choice])
             min_index = argmin(i_list)
             i_new = i_list[min_index]

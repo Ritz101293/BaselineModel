@@ -11,19 +11,20 @@ import numpy as np
 
 import Behaviours.CommonBehaviour as cb
 import Behaviours.HouseholdBehaviour as hb
+import Utils.Utils as ut
 
 
-#@profile
+# @profile
 def cgoods_interaction(households, firm_c, banks):
     h_ids = np.array(list(households.keys()))
     id_firm_c = np.array(list(firm_c.keys()))
 
-    choose = np.random.choice
+    # choose = np.random.choice
     argmin = np.argmin
     array = np.array
     getPs = cb.get_switch_probability
     delete = np.delete
-    binom= np.random.binomial
+    binom = np.random.binomial
     where = np.where
     isin = np.isin
     concat = np.concatenate
@@ -37,7 +38,7 @@ def cgoods_interaction(households, firm_c, banks):
             if h_obj.C_D - h_obj.C_r > 0:
                 f_obj = None
                 chi = h_obj.chi_c
-                f_choice = choose(id_firm_c, size=chi, replace=False) if len(id_firm_c) > chi else id_firm_c
+                f_choice = ut.draw_sample(id_firm_c, chi) if len(id_firm_c) > chi else id_firm_c
                 P = array([firm_c[i].Pc for i in f_choice])
                 min_index = argmin(P)
                 f_old = firm_c[h_obj.id_firm_c]
@@ -100,4 +101,5 @@ def update_inventories(firm_c):
     for fc in firm_c.values():
         fc.Y_n = fc.S*fc.Pc
         fc.inv[0] = fc.Y_D + fc.inv[1] - fc.S
-        fc.CG_inv = fc.inv[0]*fc.uc[0] - fc.inv[1]*fc.uc[1]
+        fc.C = fc.inv[0]*fc.uc[0]
+        fc.CG_inv = fc.C - fc.inv[1]*fc.uc[1]

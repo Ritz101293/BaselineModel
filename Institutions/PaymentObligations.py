@@ -35,8 +35,7 @@ def loan_payments(f, banks):
 def bond_payments(b, g, cb):
     b_int = b.B*g.i_b
     b.int_B = b.int_B + b_int
-    b.R = b.R + b_int
-    cb.R = cb.R + b_int
+    b.R = b.R + b_int + b.B
 
     g.B = g.B - b.B
     g.int_B = g.int_B + b_int
@@ -44,9 +43,10 @@ def bond_payments(b, g, cb):
     b.B = 0
 
 
-def bond_payments_cb(cb, g):
+def bond_payments_cb(cb, g, banks):
     b_int = cb.B*g.i_b
     cb.int_B = cb.int_B + b_int
+    cb.R = cb.R - cb.B
 
     g.B = g.B - cb.B
     g.int_B = g.int_B + b_int
@@ -67,7 +67,7 @@ def cash_advance_payments(b, cb):
     b.A = 0
 
 
-def deposit_interest(b, d):
+def deposit_interest(b, d, cb):
     d_int = d.prev_D*b.i_d
 
     b.int_D = b.int_D + d_int
@@ -101,6 +101,7 @@ def wage_dole_payments_g(g, households, banks, w_bar):
         h.D = h.D + wage[i]
         b = banks[h.id_bank_d]
         b.D = b.D + wage[i]
+        b.R = b.R + wage[i]
 
     g.W = np.sum(g.w)
 
@@ -111,10 +112,11 @@ def wage_dole_payments_g(g, households, banks, w_bar):
             h.D = h.D + dole
             b = banks[h.id_bank_d]
             b.D = b.D + dole
+            b.R = b.R + dole
             g.dole = g.dole + dole
 
 
-def pay_taxes(p, g, banks):
+def pay_taxes(p, g, banks, cb):
     t = p.T
     if banks is None:
         g.T = g.T + t
@@ -136,7 +138,7 @@ def pay_dividends(f, banks):
     b.R = b.R - div
 
 
-def pay_dividends_b(b):
+def pay_dividends_b(b, cb):
     div = b.div
     b.R = b.R - div
 

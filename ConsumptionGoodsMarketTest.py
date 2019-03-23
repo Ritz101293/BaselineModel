@@ -29,10 +29,11 @@ def consumption_goods_market():
     E = create_agent()
     E.calc_prev_statistics()
     E.form_expectation()
-    E.production_labor_prices()
+    E.production_labor_prices_credit()
     E.household_revise_wages_consumption()
     E.production()
     E.consumption_market()
+    #E.deposit_market()
 
 
 st = time.time()

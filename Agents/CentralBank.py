@@ -40,7 +40,9 @@ class CentralBank:
 
         # Parameters
         self.CR = 0.06
+        self.CR_t = 0.06
         self.LR = 0.08
+        self.LR_t = 0.08
 
     # BEHAVIOUR OF BANK
     def get_net_worth(self):
@@ -53,7 +55,11 @@ class CentralBank:
         return np.array([0, 0, 0, 0, self.B, -self.R, self.A,
                          self.get_net_worth()])
 
-    def get_tf_matrix(self):
+    def get_tf_matrix(self, t):
+        if t > 0:
+            self.del_B = self.B - self.prev_B
+            self.del_R = self.R - self.prev_R
+            self.del_A = self.A - self.prev_A
         tf = np.zeros((18, 2))
         tf[:, 0] = [0, 0, 0, 0, 0, 0, 0, 0, self.int_B, 0, self.int_A, 0,
                     -self.PI_cb, 0, 0, 0, 0, 0]

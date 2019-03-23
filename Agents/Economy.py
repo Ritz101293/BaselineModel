@@ -7,8 +7,8 @@ Created on Wed Mar  6 10:35:16 2019
 """
 
 
-import time
-from collections import deque as dq
+# import time
+# from collections import deque as dq
 
 import numpy as np
 
@@ -23,6 +23,9 @@ from Institutions import CreditMarket as crmkt
 from Institutions import LaborMarket as lmkt
 from Institutions import ConsumptionGoodsMarket as cmkt
 from Institutions import PaymentObligations as payobs
+from Institutions import DepositMarket as dpmkt
+from Institutions import BondMarket as bdmkt
+from Institutions import CashAdvanceMarket as camkt
 from StatDept.Initializer import InitialValues as iv
 from StatDept.StatOffice import Aggregate as so_agg
 from Utils import Utils as ut
@@ -48,6 +51,8 @@ class Economy:
         self.i_dbar = parameters[1][0]
 
         self.lambda_e = parameters[4][5]
+        self.nu_0 = 0
+        self.SIZE = 0
 
         self.exp_wbar = parameters[4][2]
 
@@ -56,7 +61,9 @@ class Economy:
         g_ss = MODEL[0]
         kappa = MODEL[3]
         eta = MODEL[4]
+        self.nu_0 = MODEL[7]
         SIZE = self.param[3]
+        self.SIZE = SIZE
 
         C_r = self.param[0]
         TAX = self.param[2]
@@ -271,16 +278,32 @@ class Economy:
             f_k.form_expectations()
 
     def fire_extra_labor(self, f_obj, v):
+        households = self.households
         w = f_obj.id_workers
-        for h in range(v):
-            hid = np.random.randint(low=0, high=len(w), size=1)[0]
-            self.households[hid].id_firm = 0
-            w = np.delete(w, hid)
-        f_obj.id_workers = w
+        fired_h = np.unique(ut.draw_sample(w, round(v)))
+        for h in fired_h:
+            households[h].id_firm = 0
+            households[h].w = 0
+            households[h].u_h[0] = 1
+        f_obj.id_workers = w[~np.isin(w, fired_h)]
 
     def production_labor_prices_credit(self):
+        households = self.households
+        nu_0 = self.nu_0
+        hg = self.govt.get_turnover(nu_0)
+        for h in hg:
+            households[h].id_firm = 0
+            households[h].u_h[0] = 1
+            households[h].w = 0
+
         w_e = self.exp_wbar
         for f_c in self.firms_cons.values():
+            hfc = f_c.get_turnover(nu_0)
+            for hfc in hg:
+                households[h].id_firm = 0
+                households[h].u_h[0] = 1
+                households[h].w = 0
+
             f_c.calc_desired_output()
             f_c.calc_labor_demand()
 
@@ -290,6 +313,12 @@ class Economy:
             f_c.calc_credit_demand(w_e)
 
         for f_k in self.firms_cap.values():
+            hfk = f_k.get_turnover(nu_0)
+            for hfk in hg:
+                households[h].id_firm = 0
+                households[h].u_h[0] = 1
+                households[h].w = 0
+
             f_k.calc_desired_output()
             f_k.calc_labor_demand()
             f_k.set_price(w_e)
@@ -328,8 +357,10 @@ class Economy:
         h_id = [h.id for h in households.values() if h.u_h[0] == 1]
         fc_id = [fc.id for fc in firm_c.values() if (fc.N_D - len(fc.id_workers)) > 0]
         fk_id = [fk.id for fk in firm_k.values() if (fk.N_D - len(fk.id_workers)) > 0]
-        lmkt.labor_interaction(h_id, np.array(fc_id), np.array(fk_id),
-                               households, firm_c, firm_k, govt)
+        if len(h_id) > 0:
+            h_id = lmkt.labor_interaction(np.array(h_id), np.array(fc_id), np.array(fk_id),
+                                          households, firm_c, firm_k, govt)
+        govt.UN = len(h_id)
 
         for f_c in firm_c.values():
             wkrs = f_c.id_workers
@@ -383,50 +414,72 @@ class Economy:
             depositors = b_k.id_depositors
             for dep in depositors:
                 if dep//10000 == 0:
-                    payobs.deposit_interest(b_k, households[dep])
+                    payobs.deposit_interest(b_k, households[dep], cb)
                 elif dep//10000 == 1:
-                    payobs.deposit_interest(b_k, firm_cons[dep])
+                    payobs.deposit_interest(b_k, firm_cons[dep], cb)
                 elif dep//10000 == 2:
-                    payobs.deposit_interest(b_k, firm_cap[dep])
+                    payobs.deposit_interest(b_k, firm_cap[dep], cb)
                 else:
                     print("Not possible!")
                     pass
 
-        payobs.bond_payments_cb(cb, govt)
+        payobs.bond_payments_cb(cb, govt, banks)
 
     def profits_taxes_dividends(self):
         households = self.households
         govt = self.govt
         banks = self.banks
+        cb = self.central_bank
         h_NW = 0
         div_T = 0
 
+        cb.PI_cb = cb.int_B + cb.int_A - cb.int_R
+
         for f_c in self.firms_cons.values():
             f_c.calc_profit_taxes_dividends(govt.tau_c)
-            payobs.pay_taxes(f_c, govt, banks)
+            payobs.pay_taxes(f_c, govt, banks, cb)
             payobs.pay_dividends(f_c, banks)
             div_T = div_T + f_c.div
 
         for f_k in self.firms_cap.values():
             f_k.calc_profit_taxes_dividends(govt.tau_c)
-            payobs.pay_taxes(f_k, govt, banks)
+            payobs.pay_taxes(f_k, govt, banks, cb)
             payobs.pay_dividends(f_k, banks)
             div_T = div_T + f_k.div
 
         for bk in banks.values():
             bk.calc_profit_taxes_dividends(govt.tau_c)
-            payobs.pay_taxes(bk, govt, None)
-            payobs.pay_dividends_b(bk)
+            payobs.pay_taxes(bk, govt, None, cb)
+            payobs.pay_dividends_b(bk, cb)
             div_T = div_T + bk.div
 
+        add_el = ut.add_element
         for h in households.values():
             h.calc_income_taxes(govt.tau_h)
-            payobs.pay_taxes(h, govt, banks)
+            payobs.pay_taxes(h, govt, banks, cb)
+            u_h = h.u_h[0]
+            h.u_h = add_el(u_h, h.u_h[:-1])
             h_NW = h_NW + h.D
 
         payobs.receive_dividends(households, banks, h_NW, div_T)
 
-    def get_aggregate_tf_matrix(self):
+    def deposit_market(self):
+        dpmkt.deposit_interaction(self.households, self.firms_cons,
+                                  self.firms_cap, self.banks)
+
+    def bond_market(self):
+        govt = self.govt
+        central_bank = self.central_bank
+
+        govt.PI_cb = central_bank.PI_cb
+        govt.del_B = -govt.T - govt.PI_cb + govt.W + govt.dole + govt.int_B
+        govt.B = govt.prev_B + govt.del_B
+        bdmkt.bond_interaction(govt, self.banks, central_bank)
+
+    def cash_adv_market(self):
+        camkt.cash_adv_interaction(self.banks, self.central_bank)
+
+    def get_aggregate_tf_matrix(self, t):
         agents_dict = self.get_agents_dict()
-        self.tf_matrix_agg = so_agg.get_tf_matrix(agents_dict)
+        self.tf_matrix_agg = so_agg.get_tf_matrix(agents_dict, t)
         return self.tf_matrix_agg

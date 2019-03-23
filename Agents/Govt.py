@@ -9,6 +9,8 @@ Created on Mon Mar 11 18:42:55 2019
 
 import numpy as np
 
+import Utils.Utils as ut
+
 
 class Govt:
 
@@ -51,6 +53,12 @@ class Govt:
         self.prev_B = self.B
         return np.array([0, 0, 0, 0, -self.B, 0, 0, self.get_net_worth()])
 
+    def get_turnover(self, nu):
+        id_w = self.id_workers
+        t_w = ut.draw_sample(id_w, round(nu*len(id_w)))
+        self.id_workers = id_w[~np.isin(id_w, t_w)]
+        return np.unique(t_w)
+
     def get_tf_matrix(self):
         return np.array([0, -self.W, -self.dole, 0, 0, 0, self.T, 0,
                          -self.int_B, 0, 0, 0, self.PI_cb, 0, 0, 0,
@@ -63,4 +71,3 @@ class Govt:
         self.int_B = 0
         self.PI_cb = 0
         self.del_B = 0
-

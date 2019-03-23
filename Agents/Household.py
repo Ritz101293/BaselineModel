@@ -68,7 +68,9 @@ class Household:
         self.prev_D = self.D
         return np.array([self.D, 0, 0, 0, 0, 0, 0, self.get_net_worth()])
 
-    def get_tf_matrix(self):
+    def get_tf_matrix(self, t):
+        if t > 0:
+            self.del_D = self.D - self.prev_D
         return np.array([-self.C_n, self.w, self.dole, 0, 0, 0, -self.T,
                          self.int_D, 0, 0, 0, self.div, 0, -self.del_D,
                          0, 0, 0, 0])

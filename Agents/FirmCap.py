@@ -94,7 +94,10 @@ class FirmCap:
         return np.array([self.D, -np.sum(self.L), 0, self.K,
                          0, 0, 0, self.get_net_worth()])
 
-    def get_tf_matrix(self):
+    def get_tf_matrix(self, t):
+        if t > 0:
+            self.del_D = self.D - self.prev_D
+            self.del_L = np.sum(self.L) - self.prev_L
         tf = np.zeros((18, 2))
         tf[:, 0] = [0, -self.W, 0, self.CG_inv, self.Y_n, 0, -self.T,
                     self.int_D, 0, -self.int_L, 0, -self.PI_CA,
@@ -107,6 +110,12 @@ class FirmCap:
         self.exp_S = self.exp_S + self.lambda_e*(self.S - self.exp_S)
         self.exp_OCF = self.exp_OCF + self.lambda_e*(self.OCF - self.exp_OCF)
         self.exp_div = self.exp_div + self.lambda_e*(self.div - self.exp_div)
+
+    def get_turnover(self, nu):
+        id_w = self.id_workers
+        t_w = ut.draw_sample(id_w, round(nu*len(id_w)))
+        self.id_workers = id_w[~np.isin(id_w, t_w)]
+        return np.unique(t_w)
 
     def calc_desired_output(self):
         self.Y_D = self.exp_S*(1 + self.nu) - self.inv[0]

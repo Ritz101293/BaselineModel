@@ -9,16 +9,17 @@ Created on Thu Mar 14 16:44:26 2019
 
 import numpy as np
 
-# import Utils.Utils as ut
+import Utils.Utils as ut
 import Behaviours.CommonBehaviour as cb
 import Behaviours.FirmConsBehaviour as fcb
 
-#@profile
+
+# @profile
 def select_supplier(firm_c, firm_k):
     id_firm_c = np.array(list(firm_c.keys()))
     id_firm_k = np.array(list(firm_k.keys()))
 
-    choose = np.random.choice
+    # choose = np.random.choice
     array = np.array
     argmin = np.argmin
     getPs = cb.get_switch_probability
@@ -26,7 +27,7 @@ def select_supplier(firm_c, firm_k):
     for f_c in id_firm_c:
         f_obj = firm_c[f_c]
         chi = f_obj.chi_k
-        s_choice = choose(id_firm_k, size=chi, replace=False)
+        s_choice = ut.draw_sample(id_firm_k, chi)
         P = array([firm_k[i].Pk for i in s_choice])
         min_index = argmin(P)
         P_new = P[min_index]
@@ -83,4 +84,5 @@ def update_inventories(firm_k):
     for f_k in firm_k.values():
         f_k.Y_n = f_k.S*f_k.Pk
         f_k.inv[0] = f_k.inv[1] + f_k.Y_r - f_k.S
-        f_k.CG_inv = f_k.inv[0]*f_k.uc[0] - f_k.inv[1]*f_k.uc[1]
+        f_k.K = f_k.inv[0]*f_k.uc[0]
+        f_k.CG_inv = f_k.K - f_k.inv[1]*f_k.uc[1]
