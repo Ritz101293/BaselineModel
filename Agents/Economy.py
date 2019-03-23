@@ -357,10 +357,6 @@ class Economy:
         h_id = [h.id for h in households.values() if h.u_h[0] == 1]
         fc_id = [fc.id for fc in firm_c.values() if (fc.N_D - len(fc.id_workers)) > 0]
         fk_id = [fk.id for fk in firm_k.values() if (fk.N_D - len(fk.id_workers)) > 0]
-        if len(h_id) > 0:
-            h_id = lmkt.labor_interaction(np.array(h_id), np.array(fc_id), np.array(fk_id),
-                                          households, firm_c, firm_k, govt)
-        govt.UN = len(h_id)
 
         for f_c in firm_c.values():
             wkrs = f_c.id_workers
@@ -378,6 +374,11 @@ class Economy:
         wl = len(wkrs)
         for i in range(wl):
             govt.w[i] = households[wkrs[i]].w_bar
+
+        if len(h_id) > 0:
+            h_id = lmkt.labor_interaction(np.array(h_id), np.array(fc_id), np.array(fk_id),
+                                          households, firm_c, firm_k, govt)
+        govt.UN = len(h_id)
 
     def production(self):
         for f_c in self.firms_cons.values():
