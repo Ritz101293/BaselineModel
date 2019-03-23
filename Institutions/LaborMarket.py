@@ -44,6 +44,7 @@ def govt_labor_interaction(govt, household, h_id, choose, add_el,
             govt.w = add_el(hobj.w_bar, govt.w)
             hobj.id_firm = -1
             hobj.w = hobj.w_bar
+            hobj.dole = 0
             hobj.u_h[0] = 0
             # print("govt hires household %d" % (h))
         h_id = h_id[~isin(h_id, chosen)]
@@ -71,6 +72,7 @@ def firmc_labor_interaction(firm_c, id_firm_c, household, h_id, choose, isin,
             fc_obj.w = add_el(w_list[min_index], fc_obj.w)
             hobj.id_firm = fc
             hobj.w = household[hid].w_bar
+            hobj.dole = 0
             hobj.u_h[0] = 0
             h_id = delete(h_id, where(h_id == hid))
             # print(h_id)
@@ -89,6 +91,7 @@ def firmc_labor_interaction(firm_c, id_firm_c, household, h_id, choose, isin,
             fc_obj.w = add_el(w_list[min_index], fc_obj.w)
             hobj.id_firm = fc
             hobj.w = household[hid].w_bar
+            hobj.dole = 0
             hobj.u_h[0] = 0
             h_id = delete(h_id, where(h_id == hid))
             # print("firm %d hires household %d" % (fc, hid))
@@ -111,6 +114,7 @@ def firmc_labor_interaction(firm_c, id_firm_c, household, h_id, choose, isin,
                         fc_obj.w = add_el(w_list[min_index], fc_obj.w)
                         hobj.id_firm = fc
                         hobj.w = hobj.w_bar
+                        hobj.dole = 0
                         hobj.u_h[0] = 0
                         # print("firm %d hires household %d" % (fc, hid))
                         h_id = delete(h_id, where(h_id == hid))
@@ -139,6 +143,7 @@ def firmk_labor_interaction(firm_k, id_firm_k, household, h_id, choose, isin,
             fk_obj.w = add_el(w_list[min_index], fk_obj.w)
             hobj.id_firm = fk
             hobj.w = household[hid].w_bar
+            hobj.dole = 0
             hobj.u_h[0] = 0
             h_id = delete(h_id, where(h_id == hid))
             # print("firm %d hires household %d" % (fk, hid))
@@ -156,6 +161,7 @@ def firmk_labor_interaction(firm_k, id_firm_k, household, h_id, choose, isin,
             fk_obj.w = add_el(w_list[min_index], fk_obj.w)
             hobj.id_firm = fk
             hobj.w = household[hid].w_bar
+            hobj.dole = 0
             hobj.u_h[0] = 0
             h_id = delete(h_id, where(h_id == hid))
             # print("firm %d hires household %d" % (fk, hid))
@@ -178,6 +184,7 @@ def firmk_labor_interaction(firm_k, id_firm_k, household, h_id, choose, isin,
                         fk_obj.w = add_el(w_list[min_index], fk_obj.w)
                         hobj.id_firm = fk
                         hobj.w = hobj.w_bar
+                        hobj.dole = 0
                         hobj.u_h[0] = 0
                         # print("firm %d hires household %d" % (fk, hid))
                         h_id = delete(h_id, where(h_id == hid))

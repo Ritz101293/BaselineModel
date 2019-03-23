@@ -67,5 +67,6 @@ for mc in range(MC):
         tf_matrix[:, :, t, mc] = E.get_aggregate_tf_matrix(t)
         # print("\t T = %d finished in %f seconds" % (t, time.time()-st_t))
     print("MC no %d completed in %f seconds" % (mc, time.time()-st_mc))
-
+    bs1 = balance_sheet[:,:,:,mc]
+    tf1 = tf_matrix[:,:,:,mc]
 print("total time elapsed: %f seconds" % (time.time() - start_time))
