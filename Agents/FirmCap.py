@@ -114,7 +114,9 @@ class FirmCap:
     def get_turnover(self, nu):
         id_w = self.id_workers
         t_w = ut.draw_sample(id_w, round(nu*len(id_w)))
-        self.id_workers = id_w[~np.isin(id_w, t_w)]
+        rem = ~np.isin(id_w, t_w)
+        self.id_workers = id_w[rem]
+        self.w = self.w[rem]
         return np.unique(t_w)
 
     def calc_desired_output(self):

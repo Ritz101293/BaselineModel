@@ -114,6 +114,7 @@ def wage_dole_payments_g(g, households, banks, w_bar):
             b.D = b.D + dole
             b.R = b.R + dole
             g.dole = g.dole + dole
+            
 
 
 def pay_taxes(p, g, banks, cb):

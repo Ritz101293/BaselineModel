@@ -285,7 +285,9 @@ class Economy:
             households[h].id_firm = 0
             households[h].w = 0
             households[h].u_h[0] = 1
-        f_obj.id_workers = w[~np.isin(w, fired_h)]
+        rem = ~np.isin(w, fired_h)
+        f_obj.id_workers = w[rem]
+        f_obj.w = f_obj.w[rem]
 
     def production_labor_prices_credit(self):
         households = self.households
