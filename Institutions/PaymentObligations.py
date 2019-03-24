@@ -15,14 +15,17 @@ import Behaviours.CommonBehaviour as cb
 def loan_payments(f, banks):
     Lp = f.L_r[1:]/f.eta
     Li = f.L[1:]*f.i_l[1:]
+    f.OCF = -np.sum(Lp)
 
     bks = f.id_bank_l[1:]
     bkl = len(bks)
+    # print(bks)
     for i in range(bkl):
-        b_obj = banks[bks[i]]
-        b_obj.L = b_obj.L - Lp[i]
-        b_obj.del_L = b_obj.L - b_obj.prev_L
-        cb.pay_loan_interest(f, Li[i], banks[f.id_bank_d], b_obj)
+        if bks[i] != -1:
+            b_obj = banks[bks[i]]
+            b_obj.L = b_obj.L - Lp[i]
+            b_obj.del_L = b_obj.L - b_obj.prev_L
+            cb.pay_loan_interest(f, Li[i], banks[f.id_bank_d], b_obj)
 
     f.L[1:] = f.L[1:] - Lp
     f.L = f.L[:-1]
@@ -106,7 +109,7 @@ def wage_dole_payments_g(g, households, banks, w_bar):
     g.W = np.sum(g.w)
 
     for h in households.values():
-        if h.u_h[0] == 1:
+        if h.u_h_c == 1:
             dole = g.omega*w_bar
             h.dole = dole
             h.D = h.D + dole

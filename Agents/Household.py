@@ -30,6 +30,7 @@ class Household:
         self.Pc = Pc
         # Labor
         self.u_h = np.array([1]*4)
+        self.u_h_c = 1
         self.u_bar = MODEL[1]
         self.w_bar = MODEL[2]
         # Finance
@@ -100,7 +101,7 @@ class Household:
         self.del_D = 0
 
     def calc_income_taxes(self, tau):
-        t_inc = self.w + self.int_D + self.div if self.u_h[0] == 0 else self.int_D + self.div
+        t_inc = self.w + self.int_D + self.div if self.u_h_c == 0 else self.int_D + self.div
         self.T = tau*t_inc
-        self.NI = t_inc - self.T if self.u_h[0] == 0 else t_inc + self.dole - self.T
+        self.NI = t_inc - self.T if self.u_h_c == 0 else t_inc + self.dole - self.T
         self.div = 0

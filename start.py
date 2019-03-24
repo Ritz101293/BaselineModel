@@ -22,7 +22,7 @@ start_time = time.time()
 os.chdir('/Users/riteshkakade/Desktop/AB-SFC/Baseline')
 
 MC = 1
-T = 1
+T = 5
 
 balance_sheet = np.zeros((8, 7, T + 1, MC))
 tf_matrix = np.zeros((18, 10, T + 1, MC))
@@ -43,8 +43,10 @@ for mc in range(MC):
     tf_matrix[:, :, 0, mc] = E.get_aggregate_tf_matrix(0)
 
     for t in range(1, T + 1):
+        print(t)
         # st_t = time.time()
-        E.calc_prev_statistics()
+        E.bankrupcy_market()
+        E.reset_govt_cb_variables()
         balance_sheet[:, :, t, mc] = E.get_aggregate_bal_sheet()
         E.form_expectation()
         E.production_labor_prices_credit()
@@ -65,7 +67,10 @@ for mc in range(MC):
         E.bond_market()
         E.cash_adv_market()
         tf_matrix[:, :, t, mc] = E.get_aggregate_tf_matrix(t)
+
+        E.calc_statistics()
         # print("\t T = %d finished in %f seconds" % (t, time.time()-st_t))
+        input("Press enter to go to next time period:")
     print("MC no %d completed in %f seconds" % (mc, time.time()-st_mc))
     bs1 = balance_sheet[:,:,:,mc]
     tf1 = tf_matrix[:,:,:,mc]

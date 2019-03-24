@@ -17,7 +17,9 @@ i_k = 0.5
 
 
 def get_default_probability(OCF, ds, zeta):
-    return (1/(1 + math.exp((OCF - zeta*ds)/ds)))
+    e = (OCF - zeta*ds)/ds
+    p = (1/(1 + math.exp(e))) if e < 50 else 0
+    return p
 
 
 def handle_loan_request(f_obj, b_obj, firm_c=0):
@@ -38,11 +40,12 @@ def handle_loan_request(f_obj, b_obj, firm_c=0):
         f_obj.L_r = ut.add_element(Ld, f_obj.L_r)
         f_obj.L = ut.add_element(Ld, f_obj.L)
         f_obj.i_l = ut.add_element(i_l, f_obj.i_l)
+        # print("bank %d grant loan of %f to firm %d" % (b_obj.id, Ld, f_obj.id))
     else:
         f_obj.id_bank_l = ut.add_element(-1, f_obj.id_bank_l)
         f_obj.L_r = ut.add_element(0, f_obj.L_r)
         f_obj.L = ut.add_element(0, f_obj.L)
-        f_obj.i_l = ut.add_element(0, f_obj.L_r)
+        f_obj.i_l = ut.add_element(0, f_obj.i_l)
 
 
 def get_expected_profit(pd, delta, Ld, count, alpha, i_l):

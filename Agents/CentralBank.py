@@ -12,7 +12,7 @@ import numpy as np
 
 class CentralBank:
 
-    def __init__(self, B, R, GCB, INT, MODEL):
+    def __init__(self, B, R, GCB, INT, MODEL, LR0, CR0):
         # 1) Network variables
         # 2) Nominal variables
         # 3) Desired variables
@@ -39,9 +39,9 @@ class CentralBank:
         self.del_A = 0
 
         # Parameters
-        self.CR = 0.06
+        self.CR = CR0
         self.CR_t = 0.06
-        self.LR = 0.08
+        self.LR = LR0
         self.LR_t = 0.08
 
     # BEHAVIOUR OF BANK

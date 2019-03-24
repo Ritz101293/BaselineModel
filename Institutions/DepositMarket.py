@@ -22,6 +22,9 @@ def deposit_interaction(households, firm_c, firm_k, banks):
     argmax = np.argmax
     getPs = cb.get_switch_probability
     binom = np.random.binomial
+    delete = np.delete
+    where = np.where
+    add_el = ut.add_element
 
     for h in households.values():
         old_b = h.id_bank_d
@@ -36,7 +39,7 @@ def deposit_interaction(households, firm_c, firm_k, banks):
             ps = getPs(eps, i_new, i_old)
             if binom(1, ps) == 1:
                 new_id = b_choice[max_index]
-                switch_bank(h, old_b, new_id, banks)
+                switch_bank(h, old_b, new_id, banks, delete, where, add_el)
                 # print("household %d switched from bank %d to %d" %(h.id, old_b, new_id))
             else:
                 pass
@@ -56,7 +59,7 @@ def deposit_interaction(households, firm_c, firm_k, banks):
             ps = getPs(eps, i_new, i_old)
             if binom(1, ps) == 1:
                 new_id = b_choice[max_index]
-                switch_bank(fc, old_b, new_id, banks)
+                switch_bank(fc, old_b, new_id, banks, delete, where, add_el)
                 # print("firmc %d switched from bank %d to %d" %(fc.id, old_b, new_id))
             else:
                 pass
@@ -76,7 +79,7 @@ def deposit_interaction(households, firm_c, firm_k, banks):
             ps = getPs(eps, i_new, i_old)
             if binom(1, ps) == 1:
                 new_id = b_choice[max_index]
-                switch_bank(fk, old_b, new_id, banks)
+                switch_bank(fk, old_b, new_id, banks, delete, where, add_el)
                 # print("firmk %d switched from bank %d to %d" %(fk.id, old_b, new_id))
             else:
                 pass
@@ -84,12 +87,17 @@ def deposit_interaction(households, firm_c, firm_k, banks):
             pass
 
 
-def switch_bank(p, old_b, new_id, banks):
+def switch_bank(p, old_b, new_id, banks, delete, where, add_el):
     old_bo = banks[old_b]
     new_b = banks[new_id]
     dep = p.D
     p.id_bank_d = new_id
+
     old_bo.D = old_bo.D - dep
     old_bo.R = old_bo.R - dep
+    old_deptr = old_bo.id_depositors
+    old_bo.id_depositors = delete(old_deptr, where(old_deptr == p.id))
+
     new_b.D = new_b.D + dep
     new_b.R = new_b.R + dep
+    new_b.id_depositors = add_el(p.id, new_b.id_depositors)

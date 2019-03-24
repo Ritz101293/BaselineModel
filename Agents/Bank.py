@@ -32,8 +32,8 @@ class Bank:
         self.PI = (L*INT[1]/(1 + MODEL[0])) + (B*INT[2]/(1 + MODEL[0])) - (D*INT[0]/(1 + MODEL[0]))
         self.div = BANK[0]*(1 - tau_c)*((L*INT[1]/(1 + MODEL[0])) + (B*INT[2]/(1 + MODEL[0])) - (D*INT[0]/(1 + MODEL[0])))
         # Efficiency
-        self.LR = (-D + L + B + R)/L
-        self.CR = R/D
+        self.LR = R/D
+        self.CR = (-D + L + B + R)/L
         # Interest rates
         self.i_d = INT[0]
         self.i_l = INT[1]
@@ -123,7 +123,7 @@ class Bank:
 
     def calc_profit_taxes_dividends(self, tau):
         self.PI = self.int_B + self.int_L - self.int_D - self.int_A
-        self.T = self.PI*tau
+        self.T = max(self.PI*tau, 0)
         self.PI_CA = self.PI - self.T
-        self.PI_KA = self.PI_CA*(1 - self.rho)
-        self.div = self.PI_CA - self.PI_KA
+        self.div = max(self.PI_CA*self.rho, 0)
+        self.PI_KA = self.PI_CA - self.div

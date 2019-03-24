@@ -20,12 +20,16 @@ def labor_interaction(h_id, id_firm_c, id_firm_k, household, firm_c, firm_k, gov
     add_el = ut.add_element
     delete = np.delete
     where = np.where
+    unique = np.unique
+    print(len(h_id))
     h_id = govt_labor_interaction(govt, household, h_id, choose, add_el, isin)
+    print(len(h_id))
     h_id = firmc_labor_interaction(firm_c, id_firm_c, household, h_id, choose, isin,
-                                   array, argmin, add_el, delete, where)
+                                   array, argmin, add_el, delete, where, unique)
+    print(len(h_id))
     h_id = firmk_labor_interaction(firm_k, id_firm_k, household, h_id, choose, isin,
-                                   array, argmin, add_el, delete, where)
-
+                                   array, argmin, add_el, delete, where, unique)
+    print(len(h_id))
     return h_id
 
 
@@ -37,6 +41,7 @@ def govt_labor_interaction(govt, household, h_id, choose, add_el,
         while(vac > 0):
             chosen = np.concatenate((chosen, np.unique(choose(h_id, vac))))
             vac = vac - len(chosen)
+            h_id = h_id[~isin(h_id, chosen)]
 
         for h in chosen:
             hobj = household[h]
@@ -45,9 +50,8 @@ def govt_labor_interaction(govt, household, h_id, choose, add_el,
             hobj.id_firm = -1
             hobj.w = hobj.w_bar
             hobj.dole = 0
-            hobj.u_h[0] = 0
+            hobj.u_h_c = 0
             # print("govt hires household %d" % (h))
-        h_id = h_id[~isin(h_id, chosen)]
         return h_id
     else:
         # print("govt doesn't have vacancy")
@@ -55,7 +59,7 @@ def govt_labor_interaction(govt, household, h_id, choose, add_el,
 
 
 def firmc_labor_interaction(firm_c, id_firm_c, household, h_id, choose, isin,
-                            array, argmin, add_el, delete, where):
+                            array, argmin, add_el, delete, where, unique):
     id_firmc1 = choose(id_firm_c, round(len(id_firm_c)/2)) if len(id_firm_c) > 1 else id_firm_c
     id_firmc2 = id_firm_c[~isin(id_firm_c, id_firmc1)] if len(id_firm_c) > 1 else []
 
@@ -63,7 +67,7 @@ def firmc_labor_interaction(firm_c, id_firm_c, household, h_id, choose, isin,
         if len(h_id) != 0:
             fc_obj = firm_c[fc]
             chi = fc_obj.chi_l
-            h_choice = choose(h_id, chi)
+            h_choice = unique(choose(h_id, chi))
             w_list = array([household[i].w_bar for i in h_choice])
             min_index = argmin(w_list)
             hid = h_choice[min_index]
@@ -73,7 +77,7 @@ def firmc_labor_interaction(firm_c, id_firm_c, household, h_id, choose, isin,
             hobj.id_firm = fc
             hobj.w = household[hid].w_bar
             hobj.dole = 0
-            hobj.u_h[0] = 0
+            hobj.u_h_c = 0
             h_id = delete(h_id, where(h_id == hid))
             # print(h_id)
             # print("firm %d hires household %d" % (fc, hid))
@@ -82,7 +86,7 @@ def firmc_labor_interaction(firm_c, id_firm_c, household, h_id, choose, isin,
         if len(h_id) != 0:
             fc_obj = firm_c[fc]
             chi = fc_obj.chi_l
-            h_choice = choose(h_id, chi)
+            h_choice = unique(choose(h_id, chi))
             w_list = array([household[i].w_bar for i in h_choice])
             min_index = argmin(w_list)
             hid = h_choice[min_index]
@@ -92,7 +96,7 @@ def firmc_labor_interaction(firm_c, id_firm_c, household, h_id, choose, isin,
             hobj.id_firm = fc
             hobj.w = household[hid].w_bar
             hobj.dole = 0
-            hobj.u_h[0] = 0
+            hobj.u_h_c = 0
             h_id = delete(h_id, where(h_id == hid))
             # print("firm %d hires household %d" % (fc, hid))
 
@@ -105,7 +109,7 @@ def firmc_labor_interaction(firm_c, id_firm_c, household, h_id, choose, isin,
             if vac > 0:
                 for v in range(vac):
                     if len(h_id) != 0:
-                        h_choice = choose(h_id, chi)
+                        h_choice = unique(choose(h_id, chi))
                         w_list = array([household[i].w_bar for i in h_choice])
                         min_index = argmin(w_list)
                         hid = h_choice[min_index]
@@ -115,7 +119,7 @@ def firmc_labor_interaction(firm_c, id_firm_c, household, h_id, choose, isin,
                         hobj.id_firm = fc
                         hobj.w = hobj.w_bar
                         hobj.dole = 0
-                        hobj.u_h[0] = 0
+                        hobj.u_h_c = 0
                         # print("firm %d hires household %d" % (fc, hid))
                         h_id = delete(h_id, where(h_id == hid))
             else:
@@ -126,7 +130,7 @@ def firmc_labor_interaction(firm_c, id_firm_c, household, h_id, choose, isin,
 
 
 def firmk_labor_interaction(firm_k, id_firm_k, household, h_id, choose, isin,
-                            array, argmin, add_el, delete, where):
+                            array, argmin, add_el, delete, where, unique):
     id_firmk1 = choose(id_firm_k, round(len(id_firm_k)/2)) if len(id_firm_k) > 1 else id_firm_k
     id_firmk2 = id_firm_k[~isin(id_firm_k, id_firmk1)] if len(id_firm_k) > 1 else []
 
@@ -134,7 +138,7 @@ def firmk_labor_interaction(firm_k, id_firm_k, household, h_id, choose, isin,
         if len(h_id) != 0:
             fk_obj = firm_k[fk]
             chi = fk_obj.chi_l
-            h_choice = choose(h_id, chi)
+            h_choice = unique(choose(h_id, chi))
             w_list = array([household[i].w_bar for i in h_choice])
             min_index = argmin(w_list)
             hid = h_choice[min_index]
@@ -144,7 +148,7 @@ def firmk_labor_interaction(firm_k, id_firm_k, household, h_id, choose, isin,
             hobj.id_firm = fk
             hobj.w = household[hid].w_bar
             hobj.dole = 0
-            hobj.u_h[0] = 0
+            hobj.u_h_c = 0
             h_id = delete(h_id, where(h_id == hid))
             # print("firm %d hires household %d" % (fk, hid))
 
@@ -152,7 +156,7 @@ def firmk_labor_interaction(firm_k, id_firm_k, household, h_id, choose, isin,
         if len(h_id) != 0:
             fk_obj = firm_k[fk]
             chi = fk_obj.chi_l
-            h_choice = choose(h_id, chi)
+            h_choice = unique(choose(h_id, chi))
             w_list = array([household[i].w_bar for i in h_choice])
             min_index = argmin(w_list)
             hid = h_choice[min_index]
@@ -162,7 +166,7 @@ def firmk_labor_interaction(firm_k, id_firm_k, household, h_id, choose, isin,
             hobj.id_firm = fk
             hobj.w = household[hid].w_bar
             hobj.dole = 0
-            hobj.u_h[0] = 0
+            hobj.u_h_c = 0
             h_id = delete(h_id, where(h_id == hid))
             # print("firm %d hires household %d" % (fk, hid))
 
@@ -175,7 +179,7 @@ def firmk_labor_interaction(firm_k, id_firm_k, household, h_id, choose, isin,
             if vac > 0:
                 for v in range(vac):
                     if len(h_id) != 0:
-                        h_choice = choose(h_id, chi)
+                        h_choice = unique(choose(h_id, chi))
                         w_list = array([household[i].w_bar for i in h_choice])
                         min_index = argmin(w_list)
                         hid = h_choice[min_index]
@@ -185,7 +189,7 @@ def firmk_labor_interaction(firm_k, id_firm_k, household, h_id, choose, isin,
                         hobj.id_firm = fk
                         hobj.w = hobj.w_bar
                         hobj.dole = 0
-                        hobj.u_h[0] = 0
+                        hobj.u_h_c = 0
                         # print("firm %d hires household %d" % (fk, hid))
                         h_id = delete(h_id, where(h_id == hid))
             else:

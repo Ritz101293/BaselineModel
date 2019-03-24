@@ -55,11 +55,11 @@ class Govt:
 
     def get_turnover(self, nu):
         id_w = self.id_workers
-        t_w = ut.draw_sample(id_w, round(nu*len(id_w)))
+        t_w = np.unique(ut.draw_sample(id_w, round(nu*len(id_w))))
         rem = ~np.isin(id_w, t_w)
         self.id_workers = id_w[rem]
         self.w = self.w[rem]
-        return np.unique(t_w)
+        return t_w
 
     def get_tf_matrix(self):
         return np.array([0, -self.W, -self.dole, 0, 0, 0, self.T, 0,

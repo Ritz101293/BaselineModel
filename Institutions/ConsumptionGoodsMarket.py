@@ -35,7 +35,7 @@ def cgoods_interaction(households, firm_c, banks):
         done_hh = np.empty((0))
         for h in h_ids:
             h_obj = households[h]
-            if h_obj.C_D - h_obj.C_r > 0:
+            if h_obj.C_D - h_obj.C_r > 0 and len(id_firm_c) != 0:
                 f_obj = None
                 chi = h_obj.chi_c
                 f_choice = ut.draw_sample(id_firm_c, chi) if len(id_firm_c) > chi else id_firm_c
@@ -69,7 +69,7 @@ def cgoods_interaction(households, firm_c, banks):
             if len(done_f) != 0:
                 id_firm_c = id_firm_c[~isin(id_firm_c, done_f)]
         h_ids = h_ids[~isin(h_ids, done_hh)]
-
+    print("firms remaining:", len(id_firm_c), "households rem:", len(h_ids))
     update_inventories(firm_c)
 
 
@@ -79,9 +79,11 @@ def transact(h_obj, f_obj, banks, delete, where):
     if supply >= demand:
         hb.consume(h_obj, demand, f_obj)
         cb.deposit_transfer(h_obj, f_obj, banks, demand*f_obj.Pc)
-        return (h_obj.id, None)
-    elif supply == demand:
-        return (h_obj.id, f_obj.id)
+        if supply == demand:
+            # print("household %d consumed whole demand")
+            return (h_obj.id, f_obj.id)
+        else:
+            return (h_obj.id, None)
     else:
         hb.consume(h_obj, supply, f_obj)
         cb.deposit_transfer(h_obj, f_obj, banks, supply*f_obj.Pc)

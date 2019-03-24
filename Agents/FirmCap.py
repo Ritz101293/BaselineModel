@@ -113,11 +113,11 @@ class FirmCap:
 
     def get_turnover(self, nu):
         id_w = self.id_workers
-        t_w = ut.draw_sample(id_w, round(nu*len(id_w)))
+        t_w = np.unique(ut.draw_sample(id_w, round(nu*len(id_w))))
         rem = ~np.isin(id_w, t_w)
         self.id_workers = id_w[rem]
         self.w = self.w[rem]
-        return np.unique(t_w)
+        return t_w
 
     def calc_desired_output(self):
         self.Y_D = self.exp_S*(1 + self.nu) - self.inv[0]
@@ -163,7 +163,9 @@ class FirmCap:
 
     def calc_profit_taxes_dividends(self, tau):
         self.PI = self.Y_n - self.W + self.CG_inv + self.int_D - self.int_L
-        self.T = self.PI*tau
+        self.T = max(self.PI*tau, 0)
         self.PI_CA = self.PI - self.T
-        self.PI_KA = self.PI_CA*(1 - self.rho)
-        self.div = self.PI_CA - self.PI_KA
+        self.div = max(self.PI_CA*self.rho, 0)
+        self.PI_KA = self.PI_CA - self.div
+        self.OCF = self.OCF + self.PI_CA - self.CG_inv
+        # self.r = self.OCF/self.prev_K
