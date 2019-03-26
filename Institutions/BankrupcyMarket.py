@@ -18,19 +18,22 @@ def bankrupcy_interaction(firm_c, firm_k, banks, households, CR, NWh):
         NWb = b.get_net_worth()
         if NWb < 0 or b.R <= 0:
             print("Bank %d is going thorough bankrupcy" % (b.id))
-            print(b.get_balance_sheet())
+            print(b.__dict__)
+            input("press enter to continue:")
             initiate_bankrupcy_banks(b, NWb, households, firm_c, firm_k, CR)
 
     for fc in firm_c.values():
         if fc.get_net_worth() < 0 or fc.D <= 0:
             print("firm %d is going thorough bankrupcy" % (fc.id))
-            print(fc.get_balance_sheet())
+            print(fc.__dict__)
+            input("press enter to continue:")
             initiate_bankrupcy_firmc(fc, households, banks, haircut, NWh)
 
     for fk in firm_k.values():
         if fk.get_net_worth() < 0 or fk.D <= 0:
             print("firm %d is going thorough bankrupcy" % (fk.id))
-            print(fk.get_balance_sheet())
+            print(fk.__dict__)
+            input("press enter to continue:")
             initiate_bankrupcy_firmk(fk, banks)
 
 

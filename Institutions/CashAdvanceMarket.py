@@ -14,7 +14,7 @@ def cash_adv_interaction(banks, cb):
         req_liquidity = LR_t*b.D
         # print("req liquidiity", req_liquidity, b.id, b.R, b.D)
         cash_adv_req = req_liquidity - b.R
-        if round(cash_adv_req, 1) > 0:
+        if cash_adv_req > 0:
             b.A = b.A + cash_adv_req
             b.R = b.R + cash_adv_req
             cb.A = cb.A + cash_adv_req

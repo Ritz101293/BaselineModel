@@ -55,6 +55,8 @@ def purchase_capital(firm_c, firm_k, banks):
         supplier_obj = firm_k[supplier_id]
         demand = f_obj.I_rD
         supply = supplier_obj.Y_r - supplier_obj.S + supplier_obj.inv[1]
+        # print(supply, demand, f_obj.id)
+        # print(f_obj.__dict__)
         if round(supply, 2) > 0:
             if supply >= demand:
                 transact(f_obj, demand, supplier_obj, banks)

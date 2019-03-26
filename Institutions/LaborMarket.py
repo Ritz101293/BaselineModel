@@ -21,15 +21,11 @@ def labor_interaction(h_id, id_firm_c, id_firm_k, household, firm_c, firm_k, gov
     delete = np.delete
     where = np.where
     unique = np.unique
-    print(len(h_id))
     h_id = govt_labor_interaction(govt, household, h_id, choose, add_el, isin)
-    print(len(h_id))
-    h_id = firmc_labor_interaction(firm_c, id_firm_c, household, h_id, choose, isin,
-                                   array, argmin, add_el, delete, where, unique)
-    print(len(h_id))
     h_id = firmk_labor_interaction(firm_k, id_firm_k, household, h_id, choose, isin,
                                    array, argmin, add_el, delete, where, unique)
-    print(len(h_id))
+    h_id = firmc_labor_interaction(firm_c, id_firm_c, household, h_id, choose, isin,
+                                   array, argmin, add_el, delete, where, unique)
     return h_id
 
 
@@ -100,6 +96,7 @@ def firmc_labor_interaction(firm_c, id_firm_c, household, h_id, choose, isin,
             h_id = delete(h_id, where(h_id == hid))
             # print("firm %d hires household %d" % (fc, hid))
 
+    hired_h = []
     np.random.shuffle(id_firm_c)
     for fc in id_firm_c:
         if len(h_id) != 0:
@@ -114,18 +111,19 @@ def firmc_labor_interaction(firm_c, id_firm_c, household, h_id, choose, isin,
                         min_index = argmin(w_list)
                         hid = h_choice[min_index]
                         hobj = household[hid]
-                        fc_obj.id_workers = add_el(hid, fc_obj.id_workers)
-                        fc_obj.w = add_el(w_list[min_index], fc_obj.w)
-                        hobj.id_firm = fc
-                        hobj.w = hobj.w_bar
-                        hobj.dole = 0
-                        hobj.u_h_c = 0
+                        if hobj.id_firm == 0:
+                            fc_obj.id_workers = add_el(hid, fc_obj.id_workers)
+                            fc_obj.w = add_el(w_list[min_index], fc_obj.w)
+                            hobj.id_firm = fc
+                            hobj.w = hobj.w_bar
+                            hobj.dole = 0
+                            hobj.u_h_c = 0
+                            hired_h.append(hid)
                         # print("firm %d hires household %d" % (fc, hid))
-                        h_id = delete(h_id, where(h_id == hid))
             else:
                 pass
                 # print("firm %d has no vacancies" % (fc))
-
+    h_id = h_id[~isin(h_id, hired_h)]
     return h_id
 
 
@@ -170,6 +168,7 @@ def firmk_labor_interaction(firm_k, id_firm_k, household, h_id, choose, isin,
             h_id = delete(h_id, where(h_id == hid))
             # print("firm %d hires household %d" % (fk, hid))
 
+    hired_h = []
     np.random.shuffle(id_firm_k)
     for fk in id_firm_k:
         if len(h_id) != 0:
@@ -184,16 +183,17 @@ def firmk_labor_interaction(firm_k, id_firm_k, household, h_id, choose, isin,
                         min_index = argmin(w_list)
                         hid = h_choice[min_index]
                         hobj = household[hid]
-                        fk_obj.id_workers = add_el(hid, fk_obj.id_workers)
-                        fk_obj.w = add_el(w_list[min_index], fk_obj.w)
-                        hobj.id_firm = fk
-                        hobj.w = hobj.w_bar
-                        hobj.dole = 0
-                        hobj.u_h_c = 0
+                        if hobj.id_firm == 0:
+                            fk_obj.id_workers = add_el(hid, fk_obj.id_workers)
+                            fk_obj.w = add_el(w_list[min_index], fk_obj.w)
+                            hobj.id_firm = fk
+                            hobj.w = hobj.w_bar
+                            hobj.dole = 0
+                            hobj.u_h_c = 0
+                            hired_h.append(hid)
                         # print("firm %d hires household %d" % (fk, hid))
-                        h_id = delete(h_id, where(h_id == hid))
             else:
                 pass
                 # print("firm %d has no vacancies" % (fk))
-
+    h_id = h_id[~isin(h_id, hired_h)]
     return h_id

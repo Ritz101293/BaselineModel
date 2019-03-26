@@ -107,11 +107,12 @@ class Economy:
         CR0 = abs(self.balance_sheet_agg[7][3]/self.balance_sheet_agg[1][3])
 
         for i in range(size_h):
-            household = hh(Dh, HH, C_r/size_h, Pc, MODEL, INT, size_h, i)
+            household = hh(round(Dh, 2), HH, round(C_r/size_h, 2), round(Pc, 2),
+                           MODEL, INT, size_h, i)
             self.households[i] = household
 
         for i in range(size_fc):
-            firm_cons = fc(Dfc, Lc, C_r/size_fc, Kc, FC, MODEL,
+            firm_cons = fc(round(Dfc, 2), Lc, C_r/size_fc, Kc, FC, MODEL,
                            Pk, FK[14], INT, size_fc, i)
             self.firms_cons[10000 + i] = firm_cons
 
@@ -148,11 +149,12 @@ class Economy:
                 h.dole = omega*h.w_bar
                 h.T = tau*((h.int_D + h.div)/g)
                 h.NI = h.dole + (h.int_D + h.div)/g - h.T
+                # N = N + 1
             else:
                 h.T = tau*(h.w + (h.int_D + h.div)/g)
                 h.NI = h.w + (h.int_D + h.div)/g - h.T
                 # N = N + 1
-        # print("Initially employed", N)
+        # print("Initially unemployed", N)
 
     def create_labor_network(self, N1, N2, N3):
         getObj = self.getObjectById
@@ -279,13 +281,12 @@ class Economy:
         rem = ~np.isin(w, fired_h)
         f_obj.id_workers = w[rem]
         f_obj.w = f_obj.w[rem]
-        print("firm %d fired %d extra labor" % (f_obj.id, len(fired_h)))
+        # print("firm %d fired %d extra labor" % (f_obj.id, len(fired_h)))
 
     def production_labor_prices_credit(self):
         households = self.households
         nu_0 = self.nu_0
         hg = self.govt.get_turnover(nu_0)
-        n=len(hg)
         #print("Govt turnover", len(hg))
         for h in hg:
             households[h].id_firm = 0
@@ -296,9 +297,8 @@ class Economy:
         w_e = self.exp_wbar
         for f_c in self.firms_cons.values():
             hfc = f_c.get_turnover(nu_0)
-            n=n+len(hfc)
             #print("firmc turnover", len(hfc))
-            for hfc in hg:
+            for h in hfc:
                 households[h].id_firm = 0
                 households[h].u_h_c = 1
                 households[h].w = 0
@@ -314,9 +314,8 @@ class Economy:
 
         for f_k in self.firms_cap.values():
             hfk = f_k.get_turnover(nu_0)
-            n=n+len(hfk)
             #print("firmk turnover", len(hfk))
-            for hfk in hg:
+            for h in hfk:
                 households[h].id_firm = 0
                 households[h].u_h_c = 1
                 households[h].w = 0
@@ -329,22 +328,28 @@ class Economy:
                 self.fire_extra_labor(f_k, len(f_k.id_workers) - f_k.N_D)
             f_k.set_price(w_e)
             f_k.calc_credit_demand(w_e)
-        print("Total turnover", n)
 
     def household_revise_wages_consumption(self):
         u_n = self.u_n
+        # t_un=0
         for h in self.households.values():
             h.revise_wage(u_n)
             h.calc_desired_consumption()
+            # t_un = t_un + (h.u_h_c == 1)
+        # print("Total unemp hh", t_un)
 
     def set_interest_rates(self):
         idb = self.i_dbar
         ilb = self.i_lbar
         LR = self.central_bank.LR
         CR = self.central_bank.CR
+        CR_t = self.central_bank.CR_t
         for bk in self.banks.values():
             bk.set_interest_rates(idb, ilb, LR, CR)
-            # print("rates", bk.i_d, bk.i_l)
+            # print("capital req", CR_t)
+            bk.L_max = bk.get_net_worth()/CR_t
+            print("lmax", bk.id, bk.L_max, bk.i_l, bk.i_d)
+            print("rates", bk.i_d, bk.i_l)
 
     def calc_investment_demand(self):
         for f_c in self.firms_cons.values():
@@ -501,7 +506,7 @@ class Economy:
             w = w + h.w
             if h.u_h[0] == 0:
                 c = c + 1
-        self.w_bar = w/c
+        self.w_bar = round(w/c, 2)
 
     def calc_average_banking_variables(self):
         cr, lr, i_d, i_l = 0, 0, 0, 0
@@ -512,8 +517,8 @@ class Economy:
             i_l = i_l + bk.i_l
         self.central_bank.LR = lr/self.SIZE[3]
         self.central_bank.CR = cr/self.SIZE[3]
-        self.i_dbar = i_d/self.SIZE[3]
-        self.i_lbar = i_l/self.SIZE[3]
+        self.i_dbar = round(i_d/self.SIZE[3], 4)
+        self.i_lbar = round(i_l/self.SIZE[3], 4)
 
     def calc_statistics(self):
         # self.reset_govt_cb_variables()

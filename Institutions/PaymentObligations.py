@@ -15,7 +15,6 @@ import Behaviours.CommonBehaviour as cb
 def loan_payments(f, banks):
     Lp = f.L_r[1:]/f.eta
     Li = f.L[1:]*f.i_l[1:]
-    f.OCF = -np.sum(Lp)
 
     bks = f.id_bank_l[1:]
     bkl = len(bks)

@@ -18,13 +18,15 @@ def credit_interaction(firm_c, firm_k, bank):
     id_firm_c = np.array(list(firm_c.keys()))
     id_firm_k = np.array(list(firm_k.keys()))
     id_bank = np.array(list(bank.keys()))
-
+    N = 0
     # choose = np.random.choice
     array = np.array
     argmin = np.argmin
     binom = np.random.binomial
     getPs = cb.get_switch_probability
     loan_req = bb.handle_loan_request
+    delete = np.delete
+    where = np.where
 
     for f_c in id_firm_c:
         fc_obj = firm_c[f_c]
@@ -39,17 +41,17 @@ def credit_interaction(firm_c, firm_k, bank):
             if i_new < i_old:
                 p_s = getPs(fc_obj.epsilon_c, i_old, i_new) if old_id != -1 else 1
                 if binom(1, p_s) == 1:
-                    loan_req(fc_obj, bank[s_choice[min_index]], 1)
+                    bid = loan_req(fc_obj, bank[s_choice[min_index]], 1)
                 else:
-                    loan_req(fc_obj, bank[fc_obj.id_bank_l[0]], 1)
+                    bid = loan_req(fc_obj, bank[fc_obj.id_bank_l[0]], 1)
             else:
-                loan_req(fc_obj, bank[fc_obj.id_bank_l[0]], 1)
+                bid = loan_req(fc_obj, bank[fc_obj.id_bank_l[0]], 1)
         else:
-            fc_obj.id_bank_l = ut.add_element(-1, fc_obj.id_bank_l)
-            fc_obj.L_r = ut.add_element(0, fc_obj.L_r)
-            fc_obj.L = ut.add_element(0, fc_obj.L)
-            fc_obj.i_l = ut.add_element(0, fc_obj.i_l)
-            print("firm %d doesnt need loan" % (fc_obj.id))
+            bb.disburse_loan(fc_obj, None, 0, None)
+            N = N + 1
+            # print("firm %d doesnt need loan" % (fc_obj.id))
+        if bid is not None:
+            id_bank = delete(id_bank, where(id_bank == bid))
 
     for f_k in id_firm_k:
         fk_obj = firm_k[f_k]
@@ -64,14 +66,15 @@ def credit_interaction(firm_c, firm_k, bank):
             if i_new < i_old:
                 p_s = getPs(fk_obj.epsilon_c, i_old, i_new) if old_id != -1 else 1
                 if binom(1, p_s) == 1:
-                    loan_req(fk_obj, bank[s_choice[min_index]])
+                    bid = loan_req(fk_obj, bank[s_choice[min_index]])
                 else:
-                    loan_req(fk_obj, bank[fk_obj.id_bank_l[0]])
+                    bid = loan_req(fk_obj, bank[fk_obj.id_bank_l[0]])
             else:
-                loan_req(fk_obj, bank[fk_obj.id_bank_l[0]])
+                bid = loan_req(fk_obj, bank[fk_obj.id_bank_l[0]])
         else:
-            fk_obj.id_bank_l = ut.add_element(-1, fk_obj.id_bank_l)
-            fk_obj.L_r = ut.add_element(0, fk_obj.L_r)
-            fk_obj.L = ut.add_element(0, fk_obj.L)
-            fk_obj.i_l = ut.add_element(0, fk_obj.i_l)
-            print("firm %d doesnt need loan" % (fk_obj.id))
+            bb.disburse_loan(fk_obj, None, 0, None)
+            N = N + 1
+            # print("firm %d doesnt need loan" % (fk_obj.id))
+        if bid is not None:
+            id_bank = delete(id_bank, where(id_bank == bid))
+    print("%d firms dont need loan" % (N))

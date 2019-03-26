@@ -29,11 +29,13 @@ class Bank:
         self.prev_R = R
         self.prev_A = 0
         # Finance
-        self.PI = (L*INT[1]/(1 + MODEL[0])) + (B*INT[2]/(1 + MODEL[0])) - (D*INT[0]/(1 + MODEL[0]))
-        self.div = BANK[0]*(1 - tau_c)*((L*INT[1]/(1 + MODEL[0])) + (B*INT[2]/(1 + MODEL[0])) - (D*INT[0]/(1 + MODEL[0])))
+        self.L_max = 0
+        self.Ls = 0
+        self.PI = round((L*INT[1]/(1 + MODEL[0])) + (B*INT[2]/(1 + MODEL[0])) - (D*INT[0]/(1 + MODEL[0])), 2)
+        self.div = round(BANK[0]*(1 - tau_c)*((L*INT[1]/(1 + MODEL[0])) + (B*INT[2]/(1 + MODEL[0])) - (D*INT[0]/(1 + MODEL[0]))), 2)
         # Efficiency
-        self.LR = R/D
-        self.CR = (-D + L + B + R)/L
+        self.LR = round(R/D, 3)
+        self.CR = round((-D + L + B + R)/L, 3)
         # Interest rates
         self.i_d = INT[0]
         self.i_l = INT[1]
@@ -41,25 +43,25 @@ class Bank:
         self.i_lprev = INT[1]
 
         # Balance Sheet variables
-        self.D = D
-        self.L = L
-        self.B = B
-        self.R = R
+        self.D = round(D, 2)
+        self.L = round(L, 2)
+        self.B = round(B, 2)
+        self.R = round(R, 2)
         self.A = 0
 
         # Transaction variables
-        self.T = tau_c*((L*INT[1]/(1 + MODEL[0])) + (B*INT[2]/(1 + MODEL[0])) - (D*INT[0]/(1 + MODEL[0])))
-        self.int_D = D*INT[0]/(1 + MODEL[0])
-        self.int_B = B*INT[2]/(1 + MODEL[0])
-        self.int_L = L*INT[1]/(1 + MODEL[0])
+        self.T = round(tau_c*((L*INT[1]/(1 + MODEL[0])) + (B*INT[2]/(1 + MODEL[0])) - (D*INT[0]/(1 + MODEL[0]))), 2)
+        self.int_D = round(D*INT[0]/(1 + MODEL[0]), 2)
+        self.int_B = round(B*INT[2]/(1 + MODEL[0]), 2)
+        self.int_L = round(L*INT[1]/(1 + MODEL[0]), 2)
         self.int_A = 0
-        self.PI_CA = (1 - tau_c)*((L*INT[1]/(1 + MODEL[0])) + (B*INT[2]/(1 + MODEL[0])) - (D*INT[0]/(1 + MODEL[0])))
-        self.PI_KA = (1 - BANK[0])*(1 - tau_c)*((L*INT[1]/(1 + MODEL[0])) + (B*INT[2]/(1 + MODEL[0])) - (D*INT[0]/(1 + MODEL[0])))
-        self.del_D = D*MODEL[0]/(1 + MODEL[0])
+        self.PI_CA = round((1 - tau_c)*((L*INT[1]/(1 + MODEL[0])) + (B*INT[2]/(1 + MODEL[0])) - (D*INT[0]/(1 + MODEL[0]))), 2)
+        self.PI_KA = round((1 - BANK[0])*(1 - tau_c)*((L*INT[1]/(1 + MODEL[0])) + (B*INT[2]/(1 + MODEL[0])) - (D*INT[0]/(1 + MODEL[0]))), 2)
+        self.del_D = round(D*MODEL[0]/(1 + MODEL[0]), 2)
         self.del_A = 0
-        self.del_R = R*MODEL[0]/(1 + MODEL[0])
-        self.del_B = B*MODEL[0]/(1 + MODEL[0])
-        self.del_L = L*MODEL[0]/(1 + MODEL[0])
+        self.del_R = round(R*MODEL[0]/(1 + MODEL[0]), 2)
+        self.del_B = round(B*MODEL[0]/(1 + MODEL[0]), 2)
+        self.del_L = round(L*MODEL[0]/(1 + MODEL[0]), 2)
 
         # Parameters
         self.rho = BANK[0]
@@ -116,10 +118,10 @@ class Bank:
     def set_interest_rates(self, i_dbar, i_lbar, LR, CR):
         self.reset_variables()
         self.i_dprev = self.i_d
-        self.i_d = ut.update_variable(self.i_d, self.LR < LR)
+        self.i_d = round(ut.update_variable(self.i_d, self.LR < LR), 4)
 
         self.i_lprev = self.i_l
-        self.i_l = ut.update_variable(self.i_l, self.CR < CR)
+        self.i_l = round(ut.update_variable(self.i_l, self.CR < CR), 4)
 
     def calc_profit_taxes_dividends(self, tau):
         self.PI = self.int_B + self.int_L - self.int_D - self.int_A

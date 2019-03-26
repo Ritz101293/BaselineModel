@@ -21,6 +21,7 @@ class FirmCons:
 
         kappa = MODEL[3]
         eta = MODEL[4]
+        C = round(C, 2)
         # Network Ids
         self.id_bank_l = np.empty((0))
         self.id_workers = np.array([-1]*round(FC[0]/size_fc))
@@ -30,7 +31,7 @@ class FirmCons:
         self.Y_D = C
         self.Y_r = C
         self.S = C
-        self.inv = np.array([FC[17]/size_fc, FC[17]/size_fc])
+        self.inv = np.around(np.array([FC[17]/size_fc, FC[17]/size_fc]), 2)
         # Costs
         self.uc = np.array([FC[14], FC[14]])
         self.uvc = np.array([FC[15], FC[15]])
@@ -39,17 +40,17 @@ class FirmCons:
         self.w = np.array([MODEL[2]]*round(FC[0]/size_fc))
         # Price
         self.MU = FC[3]
-        self.Pc = FC[16]
+        self.Pc = round(FC[16], 2)
         # Capital stock & Investment
-        self.K_r = np.array([MODEL[10]/(size_fc*kappa)]*kappa)
-        self.Pk = np.array([Pk/(1 + MODEL[0])**i for i in range(kappa)])
-        self.I_rD = Yk/size_fc
-        self.I_nD = Yk*Pk/size_fc
-        self.I_r = Yk/size_fc
+        self.K_r = np.around(np.array([MODEL[10]/(size_fc*kappa)]*kappa), 2)
+        self.Pk = np.around(np.array([Pk/(1 + MODEL[0])**i for i in range(kappa)]), 2)
+        self.I_rD = round(Yk/size_fc, 2)
+        self.I_nD = round(Yk*Pk/size_fc, 2)
+        self.I_r = round(Yk/size_fc, 2)
         self.prev_K = 0
         # Credit
-        self.L_D = L[0]
-        self.L_r = np.array([L[0]/(1 + MODEL[0])**i for i in range(eta)])
+        self.L_D = round(L[0], 2)
+        self.L_r = np.around(np.array([L[0]/(1 + MODEL[0])**i for i in range(eta)]), 2)
         self.i_l = np.array([INT[1]]*eta)
         self.prev_L = 0
         # Finance
@@ -57,7 +58,7 @@ class FirmCons:
         self.div = (FC[18] - FC[19])*FC[2]/size_fc
         self.OCF = FC[22]/size_fc
         self.r = FC[22]/(size_fc*np.sum(K))
-        self.r_bar = FC[22]/(size_fc*np.sum(K))
+        self.r_bar = round(FC[22]/(size_fc*np.sum(K)), 4)
         self.prev_D = 0
         # Efficiency
         self.u_D = MODEL[8]
@@ -66,10 +67,10 @@ class FirmCons:
         self.l_k = MODEL[9]
 
         # Balance sheet variables
-        self.D = D
-        self.L = np.array(L)
+        self.D = round(D, 2)
+        self.L = np.around(np.array(L), 2)
         self.C = FC[17]*FC[14]/size_fc
-        self.K = np.array(K)
+        self.K = np.around(np.array(K), 2)
 
         # Transaction variables
         self.Y_n = C*FC[16]
@@ -146,7 +147,7 @@ class FirmCons:
         return t_w
 
     def calc_desired_output(self):
-        self.Y_D = round(self.exp_S*(1 + self.nu) - self.inv[0], 4)
+        self.Y_D = self.exp_S*(1 + self.nu) - self.inv[0]
 
     def get_desired_cap_util(self):
         self.u_D = min(1, self.Y_D/(self.mu_K*np.sum(self.K_r)))
@@ -160,7 +161,7 @@ class FirmCons:
 
     def set_price(self, exp_wbar):
         self.calc_markup()
-        self.Pc = (1 + self.MU)*exp_wbar*self.N_D/self.Y_D
+        self.Pc = round((1 + self.MU)*exp_wbar*self.N_D/self.Y_D, 4)
 
     def get_productive_cap_growth(self):
         return (self.gamma_1*(self.r - self.r_bar)/self.r_bar) + (self.gamma_2*(self.u_D - self.u_bar)/self.u_bar)
@@ -170,7 +171,8 @@ class FirmCons:
         self.I_rD = gD*np.sum(self.K_r) + self.K_r[-1]
 
     def calc_credit_demand(self, exp_wbar):
-        self.L_D = max(self.I_nD + self.exp_div + exp_wbar*self.sigma*self.N_D - self.exp_OCF - self.D, 0)
+        self.L_D = max(self.I_nD + self.exp_div + exp_wbar*self.sigma*self.N_D - self.exp_OCF, 0)
+        #self.L_D = max(self.I_nD + np.sum(self.L)/self.eta + exp_wbar*self.sigma*self.N_D - self.D, 0)
 
     def get_cap_util(self):
         self.u = self.l_k*len(self.id_workers)/np.sum(self.K_r)
@@ -214,5 +216,5 @@ class FirmCons:
         self.PI_CA = self.PI - self.T
         self.div = max(self.PI_CA*self.rho, 0)
         self.PI_KA = self.PI_CA - self.div
-        self.OCF = self.OCF + self.PI_CA + self.cap_amort - self.CG_inv
+        self.OCF = -np.sum(self.L)/self.eta + self.PI_CA + self.cap_amort - self.CG_inv
         self.r = self.OCF/self.prev_K

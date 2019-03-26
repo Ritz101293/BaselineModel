@@ -37,7 +37,7 @@ class Household:
         self.prev_D = 0
 
         # Balance sheet variables
-        self.D = D
+        self.D = round(D, 2)
 
         # Transaction Matrix variables
         self.C_n = C_r*Pc
@@ -83,14 +83,14 @@ class Household:
         fn = abs(np.random.normal(0, 0.0094))
         sum_u = np.sum(self.u_h)
         if sum_u > 2:
-            self.w_bar = self.w_bar*(1 - fn)
+            self.w_bar = round(self.w_bar*(1 - fn), 4)
         elif (sum_u <= 2 and u_n <= self.u_bar):
-            self.w_bar = self.w_bar*(1 + fn)
+            self.w_bar = round(self.w_bar*(1 + fn), 4)
         else:
             pass
 
     def calc_desired_consumption(self):
-        self.C_D = round(((self.alpha_1*self.NI) + (self.alpha_2*self.get_net_worth()))/self.exp_Pc, 4)
+        self.C_D = ((self.alpha_1*self.NI) + (self.alpha_2*self.get_net_worth()))/self.exp_Pc
         self.C_r = 0
         self.NI = 0
 

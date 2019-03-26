@@ -70,7 +70,7 @@ for mc in range(MC):
 
         E.calc_statistics()
         # print("\t T = %d finished in %f seconds" % (t, time.time()-st_t))
-        input("Press enter to go to next time period:")
+        # input("Press enter to go to next time period:")
     print("MC no %d completed in %f seconds" % (mc, time.time()-st_mc))
     bs1 = balance_sheet[:,:,:,mc]
     tf1 = tf_matrix[:,:,:,mc]

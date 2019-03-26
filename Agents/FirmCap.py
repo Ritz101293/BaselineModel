@@ -28,7 +28,7 @@ class FirmCap:
         self.Y_D = FK[14]/size_fk
         self.Y_r = FK[14]/size_fk
         self.S = FK[14]/size_fk
-        self.inv = np.array([FK[13]/size_fk, FK[13]/size_fk])
+        self.inv = np.around(np.array([FK[13]/size_fk, FK[13]/size_fk]), 2)
         # Costs
         self.uc = np.array([FK[11], FK[11]])
         # Labor
@@ -38,8 +38,8 @@ class FirmCap:
         self.MU = FK[3]
         self.Pk = FK[12]
         # Credit
-        self.L_D = L[0]
-        self.L_r = np.array([L[0]/(1 + MODEL[0])**i for i in range(eta)])
+        self.L_D = round(L[0], 2)
+        self.L_r = np.around(np.array([L[0]/(1 + MODEL[0])**i for i in range(eta)]), 2)
         self.prev_L = 0
         self.i_l = np.array([INT[1]]*eta)
         # Finance
@@ -51,8 +51,8 @@ class FirmCap:
         self.mu_N = FK[10]
 
         # Balance sheet variables
-        self.D = D
-        self.L = np.array(L)
+        self.D = round(D, 2)
+        self.L = np.around(np.array(L), 2)
         self.K = FK[13]*FK[11]/size_fk
 
         # Transaction variables
@@ -130,10 +130,11 @@ class FirmCap:
 
     def set_price(self, exp_wbar):
         self.calc_markup()
-        self.Pk = (1 + self.MU)*exp_wbar*self.N_D/self.Y_D
+        self.Pk = round((1 + self.MU)*exp_wbar*self.N_D/self.Y_D, 4)
 
     def calc_credit_demand(self, exp_wbar):
-        self.L_D = max(self.exp_div + exp_wbar*self.sigma*self.N_D - self.exp_OCF - self.D, 0)
+        self.L_D = max(self.exp_div + exp_wbar*self.sigma*self.N_D - self.exp_OCF, 0)
+        #self.L_D = max(np.sum(self.L)/self.eta + exp_wbar*self.sigma*self.N_D - self.D, 0)
 
     def reset_variables(self):
         self.PI = 0
@@ -167,5 +168,5 @@ class FirmCap:
         self.PI_CA = self.PI - self.T
         self.div = max(self.PI_CA*self.rho, 0)
         self.PI_KA = self.PI_CA - self.div
-        self.OCF = self.OCF + self.PI_CA - self.CG_inv
+        self.OCF = -np.sum(self.L)/self.eta + self.PI_CA - self.CG_inv
         # self.r = self.OCF/self.prev_K
