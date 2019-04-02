@@ -25,12 +25,20 @@ def deposit_interaction(households, firm_c, firm_k, banks):
     delete = np.delete
     where = np.where
     add_el = ut.add_element
+    unique = np.unique
+
+    # for b in banks.values():
+    #     print(b.get_capital_ratio())
+    #     if b.get_capital_ratio_exp() < 0.12:
+    #         print(b.id, "not part in depo mkrt")
+    #         bank_ids = delete(bank_ids, where(bank_ids == b.id))
+    del_D = [0]*len(bank_ids)
 
     for h in households.values():
         old_b = h.id_bank_d
         i_old = banks[old_b].i_l
         chi = h.chi_d
-        b_choice = ut.draw_sample(bank_ids, chi)
+        b_choice = unique(ut.draw_sample(bank_ids, chi)) if len(bank_ids) > chi else bank_ids
         i_ = array([banks[b].i_l for b in b_choice])
         max_index = argmax(i_)
         i_new = i_[max_index]
@@ -39,6 +47,10 @@ def deposit_interaction(households, firm_c, firm_k, banks):
             ps = getPs(eps, i_new, i_old)
             if binom(1, ps) == 1:
                 new_id = b_choice[max_index]
+                o = old_b%30000
+                n = new_id%30000
+                del_D[o] = del_D[o] - 1
+                del_D[n] = del_D[n] + 1
                 switch_bank(h, old_b, new_id, banks, delete, where, add_el)
                 # print("household %d switched from bank %d to %d" %(h.id, old_b, new_id))
             else:
@@ -50,7 +62,7 @@ def deposit_interaction(households, firm_c, firm_k, banks):
         old_b = fc.id_bank_d
         i_old = banks[old_b].i_l
         chi = fc.chi_d
-        b_choice = ut.draw_sample(bank_ids, chi)
+        b_choice = unique(ut.draw_sample(bank_ids, chi)) if len(bank_ids) > chi else bank_ids
         i_ = array([banks[b].i_l for b in b_choice])
         max_index = argmax(i_)
         i_new = i_[max_index]
@@ -59,6 +71,10 @@ def deposit_interaction(households, firm_c, firm_k, banks):
             ps = getPs(eps, i_new, i_old)
             if binom(1, ps) == 1:
                 new_id = b_choice[max_index]
+                o = old_b%30000
+                n = new_id%30000
+                del_D[o] = del_D[o] - 1
+                del_D[n] = del_D[n] + 1
                 switch_bank(fc, old_b, new_id, banks, delete, where, add_el)
                 # print("firmc %d switched from bank %d to %d" %(fc.id, old_b, new_id))
             else:
@@ -70,7 +86,7 @@ def deposit_interaction(households, firm_c, firm_k, banks):
         old_b = fk.id_bank_d
         i_old = banks[old_b].i_l
         chi = fk.chi_d
-        b_choice = ut.draw_sample(bank_ids, chi)
+        b_choice = unique(ut.draw_sample(bank_ids, chi)) if len(bank_ids) > chi else bank_ids
         i_ = array([banks[b].i_l for b in b_choice])
         max_index = argmax(i_)
         i_new = i_[max_index]
@@ -79,12 +95,21 @@ def deposit_interaction(households, firm_c, firm_k, banks):
             ps = getPs(eps, i_new, i_old)
             if binom(1, ps) == 1:
                 new_id = b_choice[max_index]
+                o = old_b%30000
+                n = new_id%30000
+                del_D[o] = del_D[o] - 1
+                del_D[n] = del_D[n] + 1
                 switch_bank(fk, old_b, new_id, banks, delete, where, add_el)
                 # print("firmk %d switched from bank %d to %d" %(fk.id, old_b, new_id))
             else:
                 pass
         else:
             pass
+
+    # for b in banks.values():
+    #     i = b.id%30000
+    #     print(b.id, b.get_capital_ratio(), del_D[i])
+    # input("press:")
 
 
 def switch_bank(p, old_b, new_id, banks, delete, where, add_el):

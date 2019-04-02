@@ -10,54 +10,49 @@ Created on Thu Mar 14 19:03:37 2019
 import numpy as np
 
 #@profile
-def get_tf_matrix(agents, t):
+def get_tf_matrix(tf_h, tf_fc, tf_fk, tf_b, govt, cb, t):
     tf = np.zeros((18, 10))
 
-    for h in agents[0].values():
-        tf[:, 0] = tf[:, 0] + h.get_tf_matrix(t)
+    tf[:, 0] = np.sum(tf_h, axis=1)
 
-    for f_c in agents[1].values():
-        tf_fc = f_c.get_tf_matrix(t)
-        tf[:, 1] = tf[:, 1] + tf_fc[:, 0]
-        tf[:, 2] = tf[:, 2] + tf_fc[:, 1]
+    l_ = np.shape(tf_fc)[1]
+    l1 = list(range(0, l_, 2))
+    l2 = list(range(1, l_, 2))
+    tf[:, 1] = np.sum(tf_fc[:, l1], axis=1)
+    tf[:, 2] = np.sum(tf_fc[:, l2], axis=1)
 
-    for f_k in agents[2].values():
-        tf_fk = f_k.get_tf_matrix(t)
-        tf[:, 3] = tf[:, 3] + tf_fk[:, 0]
-        tf[:, 4] = tf[:, 4] + tf_fk[:, 1]
+    l_ = np.shape(tf_fk)[1]
+    l1 = list(range(0, l_, 2))
+    l2 = list(range(1, l_, 2))
+    tf[:, 3] = np.sum(tf_fk[:, l1], axis=1)
+    tf[:, 4] = np.sum(tf_fk[:, l2], axis=1)
 
-    for bk in agents[3].values():
-        tf_b = bk.get_tf_matrix(t)
-        tf[:, 5] = tf[:, 5] + tf_b[:, 0]
-        tf[:, 6] = tf[:, 6] + tf_b[:, 1]
+    l_ = np.shape(tf_b)[1]
+    l1 = list(range(0, l_, 2))
+    l2 = list(range(1, l_, 2))
+    tf[:, 5] = np.sum(tf_b[:, l1], axis=1)
+    tf[:, 6] = np.sum(tf_b[:, l2], axis=1)
 
-    tf[:, 7] = agents[4].get_tf_matrix()
+    tf[:, 7] = govt.get_tf_matrix()
 
-    tf_cb = agents[5].get_tf_matrix(t)
+    tf_cb = cb.get_tf_matrix(t)
     tf[:, 8] = tf_cb[:, 0]
     tf[:, 9] = tf_cb[:, 1]
 
     return np.round(tf, 4)
 
 
-def get_balance_sheet(agents):
+def get_balance_sheet(bs_h, bs_fc, bs_fk, bs_b, govt, cb):
     bs = np.zeros((8, 7))
 
-    for h in agents[0].values():
-        bs[:, 0] = bs[:, 0] + h.get_balance_sheet()
+    bs[:, 0] = np.sum(bs_h, axis=1)
+    bs[:, 1] = np.sum(bs_fc, axis=1)
+    bs[:, 2] = np.sum(bs_fk, axis=1)
+    bs[:, 3] = np.sum(bs_b, axis=1)
 
-    for f_c in agents[1].values():
-        bs[:, 1] = bs[:, 1] + f_c.get_balance_sheet()
+    bs[:, 4] = bs[:, 4] + govt.get_balance_sheet()
 
-    for f_k in agents[2].values():
-        bs[:, 2] = bs[:, 2] + f_k.get_balance_sheet()
-
-    for bk in agents[3].values():
-        bs[:, 3] = bs[:, 3] + bk.get_balance_sheet()
-
-    bs[:, 4] = bs[:, 4] + agents[4].get_balance_sheet()
-
-    bs[:, 5] = bs[:, 5] + agents[5].get_balance_sheet()
+    bs[:, 5] = bs[:, 5] + cb.get_balance_sheet()
 
     bs[:, 6] = bs[:, 0] + bs[:, 1] + bs[:, 2] + bs[:, 3] + bs[:, 4] + bs[:, 5]
 

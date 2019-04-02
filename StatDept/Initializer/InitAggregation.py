@@ -20,7 +20,7 @@ def get_deposit(c_file, config):
     fkd = fh.get_variable(c_file, config, 'firm_cap', 'deposit')
     bd = hd + fcd + fkd
 
-    return [round(hd, 2), round(fcd, 2), round(fkd, 2), -round(bd, 2), 0, 0, 0]
+    return [hd, fcd, fkd, -bd, 0, 0, 0]
 
 
 def get_loan(c_file, config):
@@ -28,31 +28,31 @@ def get_loan(c_file, config):
     fkl = fh.get_variable(c_file, config, 'firm_cap', 'loan')
     bl = fcl + fkl
 
-    return [0, -round(fcl, 2), -round(fkl, 2), round(bl, 2), 0, 0, 0]
+    return [0, -fcl, -fkl, bl, 0, 0, 0]
 
 
 def get_cons_good(c_file, config):
     fcg = fh.get_variable(c_file, config, 'firm_cons', 'inventory')*fh.get_variable(c_file, config, 'firm_cons', 'cost')
 
-    return [0, round(fcg, 2), 0, 0, 0, 0, round(fcg, 2)]
+    return [0, fcg, 0, 0, 0, 0, fcg]
 
 
 def get_cap_good(c_file, config):
     fcg = fh.get_variable(c_file, config, 'firm_cons', 'value_capital')
     fkg = fh.get_variable(c_file, config, 'firm_cap', 'inventory')*fh.get_variable(c_file, config, 'firm_cap', 'cost')
 
-    return [0, round(fcg, 2), round(fkg, 2), 0, 0, 0, round(fcg + fkg, 2)]
+    return [0, fcg, fkg, 0, 0, 0, fcg + fkg]
 
 
 def get_bond(c_file, config):
     bb = fh.get_variable(c_file, config, 'bank', 'bond')
     cbb = fh.get_variable(c_file, config, 'central_bank', 'bond')
 
-    return [0, 0, 0, round(bb, 2), -round((bb + cbb), 2), round(cbb, 2), 0]
+    return [0, 0, 0, bb, -(bb + cbb), cbb, 0]
 
 
 def get_reserve(c_file, config):
-    r = round(fh.get_variable(c_file, config, 'bank', 'reserve'), 2)
+    r = fh.get_variable(c_file, config, 'bank', 'reserve')
 
     return [0, 0, 0, r, 0, -r, 0]
 
@@ -106,7 +106,7 @@ def get_household_params(c_file, config):
     chi_d = fh.get_variable(c_file, config, 'household', 'partner_deposit')
     epsilon_c = fh.get_variable(c_file, config, 'household', 'choice_intensity_consumption')
     epsilon_d = fh.get_variable(c_file, config, 'household', 'choice_intensity_deposit')
-    Th = round(fh.get_variable(c_file, config, 'household', 'tax'), 2)
+    Th = fh.get_variable(c_file, config, 'household', 'tax')
 
     return [alpha_1, alpha_2, v, int(chi_c), int(chi_d), epsilon_c, epsilon_d, Th]
 
@@ -128,11 +128,11 @@ def get_firm_cons_params(c_file, config):
     epsilon_c = fh.get_variable(c_file, config, 'firm_cons', 'choice_intensity_credit')
     uc = fh.get_variable(c_file, config, 'firm_cons', 'cost')
     uvc = fh.get_variable(c_file, config, 'firm_cons', 'cost_variable')
-    p = round(fh.get_variable(c_file, config, 'firm_cons', 'price'), 2)
-    inv = round(fh.get_variable(c_file, config, 'firm_cons', 'inventory'), 2)
-    PI_c = round(fh.get_variable(c_file, config, 'firm_cons', 'profit'), 2)
-    T_c = round(fh.get_variable(c_file, config, 'firm_cons', 'tax'), 2)
-    Div_c = round(fh.get_variable(c_file, config, 'firm_cons', 'dividend'), 2)
+    p = fh.get_variable(c_file, config, 'firm_cons', 'price')
+    inv = fh.get_variable(c_file, config, 'firm_cons', 'inventory')
+    PI_c = fh.get_variable(c_file, config, 'firm_cons', 'profit')
+    T_c = fh.get_variable(c_file, config, 'firm_cons', 'tax')
+    Div_c = fh.get_variable(c_file, config, 'firm_cons', 'dividend')
 
     return [int(N), nu, rho, mu, sigma, gamma_1, gamma_2, int(chi_l), int(chi_k), int(chi_d),
             int(chi_c), epsilon_k, epsilon_d, epsilon_c, uc, uvc, p, inv, PI_c, T_c, Div_c]
@@ -151,12 +151,12 @@ def get_firm_cap_params(c_file, config):
     epsilon_c = fh.get_variable(c_file, config, 'firm_cap', 'choice_intensity_credit')
     mu_N = fh.get_variable(c_file, config, 'firm_cap', 'productivity_labor')
     uc = fh.get_variable(c_file, config, 'firm_cap', 'cost')
-    p = round(fh.get_variable(c_file, config, 'firm_cap', 'price'), 2)
-    inv = round(fh.get_variable(c_file, config, 'firm_cap', 'inventory'), 2)
-    Y = round(fh.get_variable(c_file, config, 'firm_cap', 'output'), 2)
-    PI_k = round(fh.get_variable(c_file, config, 'firm_cap', 'profit'), 2)
-    T_k = round(fh.get_variable(c_file, config, 'firm_cap', 'tax'), 2)
-    Div_k = round(fh.get_variable(c_file, config, 'firm_cap', 'dividend'), 2)
+    p = fh.get_variable(c_file, config, 'firm_cap', 'price')
+    inv = fh.get_variable(c_file, config, 'firm_cap', 'inventory')
+    Y = fh.get_variable(c_file, config, 'firm_cap', 'output')
+    PI_k = fh.get_variable(c_file, config, 'firm_cap', 'profit')
+    T_k = fh.get_variable(c_file, config, 'firm_cap', 'tax')
+    Div_k = fh.get_variable(c_file, config, 'firm_cap', 'dividend')
 
     return [int(N), nu, rho, mu, sigma, int(chi_l), int(chi_d), int(chi_c), epsilon_d,
             epsilon_c, mu_N, uc, p, inv, Y, PI_k, T_k, Div_k]

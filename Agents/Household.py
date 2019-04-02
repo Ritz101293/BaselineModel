@@ -37,7 +37,7 @@ class Household:
         self.prev_D = 0
 
         # Balance sheet variables
-        self.D = round(D, 2)
+        self.D = D
 
         # Transaction Matrix variables
         self.C_n = C_r*Pc

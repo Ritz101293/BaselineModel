@@ -36,5 +36,8 @@ def update_variable(var, cond):
 def draw_sample(arr, chi):
     L = len(arr)
     # print(chi)
-    index = np.random.randint(low=0, high=L, size=chi)
-    return arr[index]
+    if L > chi:
+        index = np.random.randint(low=0, high=L, size=chi)
+        return arr[index]
+    else:
+        return arr

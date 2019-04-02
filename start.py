@@ -41,11 +41,20 @@ for mc in range(MC):
     st_mc = time.time()
     balance_sheet[:, :, 0, mc] = bs
     tf_matrix[:, :, 0, mc] = E.get_aggregate_tf_matrix(0)
+    tf_h = np.zeros((18, 8000, T+1))
+    tf_fc = np.zeros((18, 200, T+1))
+    tf_fk = np.zeros((18, 40, T+1))
+    tf_b = np.zeros((18, 20, T+1))
+
+    bs_h = np.zeros((8, 8000, T+1))
+    bs_fc = np.zeros((8, 100, T+1))
+    bs_fk = np.zeros((8, 20, T+1))
+    bs_b = np.zeros((8, 10, T+1))
 
     for t in range(1, T + 1):
+        print("***************************************************************")
         print(t)
         # st_t = time.time()
-        E.bankrupcy_market()
         E.reset_govt_cb_variables()
         balance_sheet[:, :, t, mc] = E.get_aggregate_bal_sheet()
         E.form_expectation()
@@ -71,6 +80,17 @@ for mc in range(MC):
         E.calc_statistics()
         # print("\t T = %d finished in %f seconds" % (t, time.time()-st_t))
         # input("Press enter to go to next time period:")
+        bs_h[:, :, t] = E.balance_sheet_hh
+        bs_fc[:, :, t] = E.balance_sheet_fc
+        bs_fk[:, :, t] = E.balance_sheet_fk
+        bs_b[:, :, t] = E.balance_sheet_b
+
+        tf_h[:, :, t] = E.tf_matrix_hh
+        tf_fc[:, :, t] = E.tf_matrix_fc
+        tf_fk[:, :, t] = E.tf_matrix_fk
+        tf_b[:, :, t] = E.tf_matrix_b
+    print("************************************************************************")
+    print("************************************************************************")
     print("MC no %d completed in %f seconds" % (mc, time.time()-st_mc))
     bs1 = balance_sheet[:,:,:,mc]
     tf1 = tf_matrix[:,:,:,mc]

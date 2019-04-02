@@ -13,21 +13,20 @@ import numpy as np
 haircut = 0.5
 
 
-def bankrupcy_interaction(firm_c, firm_k, banks, households, CR, NWh):
+def bankrupcy_interaction(firm_c, firm_k, banks, households, CR):
     for b in banks.values():
         NWb = b.get_net_worth()
         if NWb < 0 or b.R <= 0:
             print("Bank %d is going thorough bankrupcy" % (b.id))
             print(b.__dict__)
             input("press enter to continue:")
-            initiate_bankrupcy_banks(b, NWb, households, firm_c, firm_k, CR)
+            initiate_bankrupcy_banks(b, households, firm_c, firm_k, CR)
 
     for fc in firm_c.values():
         if fc.get_net_worth() < 0 or fc.D <= 0:
-            print("firm %d is going thorough bankrupcy" % (fc.id))
             print(fc.__dict__)
             input("press enter to continue:")
-            initiate_bankrupcy_firmc(fc, households, banks, haircut, NWh)
+            initiate_bankrupcy_firmc(fc, households, banks, haircut)
 
     for fk in firm_k.values():
         if fk.get_net_worth() < 0 or fk.D <= 0:
@@ -37,8 +36,10 @@ def bankrupcy_interaction(firm_c, firm_k, banks, households, CR, NWh):
             initiate_bankrupcy_firmk(fk, banks)
 
 
-def initiate_bankrupcy_banks(b, NWb, households, firm_c, firm_k, CR):
-    NW1 = CR*b.L
+def initiate_bankrupcy_banks(b, households, firm_c, firm_k, CR):
+    print("Bank %d is going thorough bankrupcy" % (b.id))
+    NWb = b.get_net_worth()
+    NW1 = CR*b.L*21/20
     NW = NW1 + abs(NWb)
     dep = b.D
     b.D = b.D - NW
@@ -49,72 +50,126 @@ def initiate_bankrupcy_banks(b, NWb, households, firm_c, firm_k, CR):
             h_obj = households[d]
             scale = h_obj.D/dep
             h_obj.D = h_obj.D - NW*scale
+            households[d] = h_obj
         elif d//10000 == 1:
             f_obj = firm_c[d]
             scale = f_obj.D/dep
             f_obj.D = f_obj.D - NW*scale
+            firm_c[d] = f_obj
         else:
             f_obj = firm_k[d]
             scale = f_obj.D/dep
             f_obj.D = f_obj.D - NW*scale
+            firm_k[d] = f_obj
 
 
-def initiate_bankrupcy_firmc(fc, households, banks, haircut, NWh):
-    K_disc = np.sum(fc.K)*haircut
-    Lf = fc.L
-    L = np.sum(Lf)
-    L_len = len(Lf)
-    h_loss = None
-    if K_disc >= L:
-        h_loss = L
-        for i in range(L_len):
-            bid = fc.id_bank_l[i]
-            if bid != -1:
-                li = Lf[i]
+def initiate_bankrupcy_firmc(fc, households, banks, haircut):
+    print("firm %d is going thorough bankrupcy" % (fc.id))
 
-                b_obj = banks[bid]
-                b_obj.L = b_obj.L - li
-                b_obj.R = b_obj.R + li
+    liquidity = fc.D
+    bad_loans = fc.L
+    total_bad_loans = np.sum(bad_loans)
+    L = len(bad_loans)
+    bad_loan_banks = fc.id_bank_l
 
-                fc.L[i] = 0
-                fc.i_l[i] = 0
-                fc.id_bank_l[i] = -1
-    else:
-        h_loss = K_disc
-        for i in range(L_len):
-            bid = fc.id_bank_l[i]
-            if bid != -1:
-                li = Lf[i]
-                frac = li/L
+    if total_bad_loans > 0:
+        if liquidity > 0:
+            bad_loans, total_bad_loans = pay_loans_by_liquidity(fc, banks, bad_loans,
+                                                                liquidity, total_bad_loans,
+                                                                bad_loan_banks, L)
 
-                b_obj = banks[bid]
-                b_obj.L = b_obj.L - li
-                b_obj.R = b_obj.R + frac*K_disc
+        if total_bad_loans > 0:
+            discounted_capital_value = np.sum(fc.K)*haircut
+            owners_contri = total_bad_loans if discounted_capital_value > total_bad_loans else discounted_capital_value
+            NW_households = 0
+            for h in households.values():
+                NW_households = NW_households + h.get_net_worth()
+            for h in households.values():
+                to_pay = owners_contri*h.get_net_worth()/NW_households
+                h_bank_obj = banks[h.id_bank_d]
+                h.D = h.D - to_pay
+                h_bank_obj.D = h_bank_obj.D - to_pay
+                h_bank_obj.R = h_bank_obj.R - to_pay
+                banks[h.id_bank_d] = h_bank_obj
+            for i in range(L):
+                lender_id = bad_loan_banks[i]
+                if lender_id != -1:
+                    b_obj = banks[lender_id]
+                    to_get = owners_contri*bad_loans[i]/total_bad_loans
+                    b_obj.R = b_obj.R + to_get
+                    b_obj.L = b_obj.L - to_get
+                    bad_loans[i] = bad_loans[i] - to_get
+                    total_bad_loans = total_bad_loans - to_get
+                    if bad_loans[i] > 0:
+                        b_obj.L = b_obj.L - bad_loans[i]
+                        bad_loans[i] = 0
+                    banks[lender_id] = b_obj
+                    fc.id_bank_l[i] = -1
+                    fc.i_l[i] = 0
+                    fc.L_r[i] = 0
+                    fc.L[i] = 0
+            fc.int_L = 0
 
-                fc.L[i] = 0
-                fc.i_l[i] = 0
-                fc.id_bank_l[i] = -1
-
-    for h in households.values():
-        loss = h.get_net_worth()*h_loss/NWh
-        h.D = h.D - loss
-
-        b_obj = banks[h.id_bank_d]
-        b_obj.D = b_obj.D - loss
-        b_obj.R = b_obj.R - loss
+    fire_employees(fc, households)
 
 
-def initiate_bankrupcy_firmk(fk, banks):
-    Lf = fk.L
-    L_len = len(Lf)
-    for i in range(L_len):
-        bid = fk.id_bank_l[i]
-        if bid != -1:
-            li = Lf[i]
+def initiate_bankrupcy_firmk(fk, banks, households):
+    liquidity = fk.D
+    bad_loans = fk.L
+    total_bad_loans = np.sum(bad_loans)
+    L = len(bad_loans)
+    bad_loan_banks = fk.id_bank_l
 
-            b_obj = banks[bid]
-            b_obj.L = b_obj.L - li
+    if total_bad_loans > 0:
+        if liquidity > 0:
+            bad_loans, total_bad_loans = pay_loans_by_liquidity(fk, banks, bad_loans,
+                                                                liquidity, total_bad_loans,
+                                                                bad_loan_banks, L)
 
-            fk.L[i] = 0
-            fk.i_l[i] = 0
-            fk.id_bank_l[i] = -1
+    if total_bad_loans > 0:
+        for i in range(L):
+            loss = bad_loans[i]
+            lender_id = bad_loan_banks[i]
+            if lender_id != -1:
+                b_obj = banks[lender_id]
+                b_obj.L = b_obj.L - loss
+                banks[lender_id] = b_obj
+                fk.id_bank_l[i] = -1
+                fk.i_l[i] = 0
+                fk.L_r[i] = 0
+                fk.L[i] = 0
+
+    fire_employees(fk, households)
+
+
+def pay_loans_by_liquidity(f, banks, bad_loans, liquidity, total_bad_loans, bad_loan_banks, L):
+    f_bank_obj = banks[f.id_bank_d]
+    for i in range(L):
+        lender = bad_loan_banks[i]
+        if lender != -1:
+            b_obj = banks[lender]
+            to_pay = liquidity*bad_loans[i]/total_bad_loans
+            f.D = f.D - to_pay
+    
+            f_bank_obj.D = f_bank_obj.D - to_pay
+            f_bank_obj.R = f_bank_obj.R - to_pay
+            b_obj.R = b_obj.R + to_pay
+            b_obj.L = b_obj.L - to_pay
+            banks[lender] = b_obj
+            bad_loans[i] = bad_loans[i] - to_pay
+            total_bad_loans = total_bad_loans - to_pay
+    banks[f.id_bank_d] = f_bank_obj
+
+    return bad_loans, total_bad_loans
+
+
+def fire_employees(f, households):
+    employees = f.id_workers
+    for e in employees:
+        e_obj = households[e]
+        e_obj.w_bar = e_obj.w
+        e_obj.w = 0
+        e_obj.u_h_c = 1
+        e_obj.id_firm = 0
+        households[e] = e_obj
+    f.id_workers = np.empty((0))

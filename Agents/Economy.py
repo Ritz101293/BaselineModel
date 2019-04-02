@@ -27,6 +27,7 @@ from Institutions import PaymentObligations as payobs
 from Institutions import DepositMarket as dpmkt
 from Institutions import BondMarket as bdmkt
 from Institutions import CashAdvanceMarket as camkt
+from Institutions import BankrupcyMarket as bkrmkt
 from StatDept.Initializer import InitialValues as iv
 from StatDept.StatOffice import Aggregate as so_agg
 from Utils import Utils as ut
@@ -54,8 +55,19 @@ class Economy:
         self.lambda_e = parameters[4][5]
         self.nu_0 = 0
         self.SIZE = parameters[3]
+        self.haircut = 0.5
 
         self.exp_wbar = parameters[4][2]
+
+        self.balance_sheet_hh = np.zeros((8, self.SIZE[0]))
+        self.balance_sheet_fc = np.zeros((8, self.SIZE[1]))
+        self.balance_sheet_fk = np.zeros((8, self.SIZE[2]))
+        self.balance_sheet_b = np.zeros((8, self.SIZE[3]))
+
+        self.tf_matrix_hh = np.zeros((18, self.SIZE[0]))
+        self.tf_matrix_fc = np.zeros((18, 2*self.SIZE[1]))
+        self.tf_matrix_fk = np.zeros((18, 2*self.SIZE[2]))
+        self.tf_matrix_b = np.zeros((18, 2*self.SIZE[3]))
 
     def populate(self):
         MODEL = self.param[4]
@@ -107,12 +119,12 @@ class Economy:
         CR0 = abs(self.balance_sheet_agg[7][3]/self.balance_sheet_agg[1][3])
 
         for i in range(size_h):
-            household = hh(round(Dh, 2), HH, round(C_r/size_h, 2), round(Pc, 2),
+            household = hh(Dh, HH, C_r/size_h, Pc,
                            MODEL, INT, size_h, i)
             self.households[i] = household
 
         for i in range(size_fc):
-            firm_cons = fc(round(Dfc, 2), Lc, C_r/size_fc, Kc, FC, MODEL,
+            firm_cons = fc(Dfc, Lc, C_r/size_fc, Kc, FC, MODEL,
                            Pk, FK[14], INT, size_fc, i)
             self.firms_cons[10000 + i] = firm_cons
 
@@ -241,8 +253,19 @@ class Economy:
                 self.banks, self.govt, self.central_bank]
 
     def get_aggregate_bal_sheet(self):
-        agents_dict = self.get_agents_dict()
-        self.balance_sheet_agg = so_agg.get_balance_sheet(agents_dict)
+        for h in self.households.values():
+            self.balance_sheet_hh[:, h.id_h] = h.get_balance_sheet()
+        for f_c in self.firms_cons.values():
+            self.balance_sheet_fc[:, f_c.id_fc] = f_c.get_balance_sheet()
+        for f_k in self.firms_cap.values():
+            self.balance_sheet_fk[:, f_k.id_fk] = f_k.get_balance_sheet()
+        for bk in self.banks.values():
+            self.balance_sheet_b[:, bk.id_b] = bk.get_balance_sheet()
+        self.balance_sheet_agg = so_agg.get_balance_sheet(self.balance_sheet_hh,
+                                                          self.balance_sheet_fc,
+                                                          self.balance_sheet_fk,
+                                                          self.balance_sheet_b,
+                                                          self.govt, self.central_bank)
         return self.balance_sheet_agg
 
     def reset_govt_cb_variables(self):
@@ -269,6 +292,9 @@ class Economy:
         for f_k in self.firms_cap.values():
             f_k.form_expectations()
 
+        for bk in self.banks.values():
+            bk.form_expectations()
+
     def fire_extra_labor(self, f_obj, v):
         households = self.households
         w = f_obj.id_workers
@@ -287,7 +313,7 @@ class Economy:
         households = self.households
         nu_0 = self.nu_0
         hg = self.govt.get_turnover(nu_0)
-        #print("Govt turnover", len(hg))
+        # print("Govt turnover", len(hg))
         for h in hg:
             households[h].id_firm = 0
             households[h].u_h_c = 1
@@ -295,9 +321,10 @@ class Economy:
             households[h].dole = 0
 
         w_e = self.exp_wbar
+        fct = 0
         for f_c in self.firms_cons.values():
             hfc = f_c.get_turnover(nu_0)
-            #print("firmc turnover", len(hfc))
+            fct = fct + len(hfc)
             for h in hfc:
                 households[h].id_firm = 0
                 households[h].u_h_c = 1
@@ -311,10 +338,12 @@ class Economy:
                 self.fire_extra_labor(f_c, len(f_c.id_workers) - f_c.N_D)
             f_c.set_price(w_e)
             f_c.calc_credit_demand(w_e)
+        # print("Firmc turnover", fct)
 
+        fkt = 0
         for f_k in self.firms_cap.values():
             hfk = f_k.get_turnover(nu_0)
-            #print("firmk turnover", len(hfk))
+            fkt = fkt + len(hfk)
             for h in hfk:
                 households[h].id_firm = 0
                 households[h].u_h_c = 1
@@ -328,6 +357,7 @@ class Economy:
                 self.fire_extra_labor(f_k, len(f_k.id_workers) - f_k.N_D)
             f_k.set_price(w_e)
             f_k.calc_credit_demand(w_e)
+        # print("Firmk turnover", fkt)
 
     def household_revise_wages_consumption(self):
         u_n = self.u_n
@@ -346,10 +376,15 @@ class Economy:
         CR_t = self.central_bank.CR_t
         for bk in self.banks.values():
             bk.set_interest_rates(idb, ilb, LR, CR)
+            # print(bk.get_capital_ratio(), "capital ratio of ", bk.id)
             # print("capital req", CR_t)
-            bk.L_max = bk.get_net_worth()/CR_t
-            print("lmax", bk.id, bk.L_max, bk.i_l, bk.i_d)
-            print("rates", bk.i_d, bk.i_l)
+            # delNW = bk.exp_delL + bk.exp_delR + bk.exp_delB - bk.exp_delD - bk.exp_delA
+            bk.L_max = max(bk.get_net_worth()/CR_t - (bk.L*19)/20, 0)
+            # print("lmax", bk.id, bk.L_max, bk.i_l, bk.i_d, bk.get_net_worth())
+            # if bk.L_max < 0:
+            #     print(bk.__dict__)
+            #     input("press enter to continue")
+            # print("rates", bk.i_d, bk.i_l)
 
     def calc_investment_demand(self):
         for f_c in self.firms_cons.values():
@@ -362,6 +397,7 @@ class Economy:
     def credit_market(self, t):
         crmkt.credit_interaction(self.firms_cons,
                                  self.firms_cap, self.banks)
+        # Sudden increase in NW of banks due to additions of new loans
 
     def labor_market(self):
         households = self.households
@@ -412,34 +448,65 @@ class Economy:
         households = self.households
         firm_cons = self.firms_cons
         firm_cap = self.firms_cap
+        haircut = self.haircut
         for f_c in self.firms_cons.values():
-            payobs.loan_payments(f_c, banks)
-            payobs.wage_payments(f_c, households, banks)
+            if f_c.D < np.sum(f_c.L[1:]*f_c.i_l[1:]) or f_c.get_net_worth() < 0:
+                print("Firm %d cant pay loan interests" % (f_c.id))
+                bkrmkt.initiate_bankrupcy_firmc(f_c, households, banks, haircut)
+            else:
+                payobs.loan_payments(f_c, banks)
+
+            if f_c.D < np.sum(f_c.w) or f_c.get_net_worth() < 0:
+                print("Firm %d cant pay wages" % (f_c.id))
+                bkrmkt.initiate_bankrupcy_firmc(f_c, households, banks, haircut)
+            else:
+                payobs.wage_payments(f_c, households, banks)
 
         for f_k in self.firms_cap.values():
-            payobs.loan_payments(f_k, banks)
-            payobs.wage_payments(f_k, households, banks)
+            if f_k.D < np.sum(f_k.L[1:]*f_k.i_l[1:]) or f_k.get_net_worth() < 0:
+                print("Firm %d cant pay loan interests" % (f_k.id))
+                bkrmkt.initiate_bankrupcy_firmk(f_k, banks, households)
+            else:
+                payobs.loan_payments(f_k, banks)
 
+            if f_k.D < np.sum(f_k.w) or f_k.get_net_worth() < 0:
+                print("Firm %d cant pay wages" % (f_k.id))
+                bkrmkt.initiate_bankrupcy_firmk(f_k, banks, households)
+            else:
+                payobs.wage_payments(f_k, households, banks)
+
+        # After loan repayments, sudden drop of around ~300-500 in NW in banks
         cb = self.central_bank
         govt = self.govt
         payobs.wage_dole_payments_g(govt, households, banks, self.w_bar)
 
         for b_k in banks.values():
+            # print(b_k.id, b_k.Ls, b_k.nF, b_k.get_net_worth(), b_k.get_capital_ratio(), b_k.R/b_k.D)
             payobs.bond_payments(b_k, govt, cb)
-            payobs.cash_advance_payments(b_k, cb)
-            depositors = b_k.id_depositors
-            for dep in depositors:
-                if dep//10000 == 0:
-                    payobs.deposit_interest(b_k, households[dep], cb)
-                elif dep//10000 == 1:
-                    payobs.deposit_interest(b_k, firm_cons[dep], cb)
-                elif dep//10000 == 2:
-                    payobs.deposit_interest(b_k, firm_cap[dep], cb)
-                else:
-                    print("Not possible!")
-                    pass
+            if b_k.R < b_k.A*cb.i_a or b_k.get_net_worth() < 0:
+                print("Bank %d cant pay advance interest" % (b_k.id))
+                bkrmkt.initiate_bankrupcy_banks(b_k, households, firm_cons, firm_cap, cb.CR_t)
+            else:
+                payobs.cash_advance_payments(b_k, cb)
 
+            depositors = b_k.id_depositors
+            if b_k.R < b_k.prev_D*b_k.i_d or b_k.get_net_worth() < 0:
+                print("Bank %d cant pay deposit interest" % (b_k.id))
+                bkrmkt.initiate_bankrupcy_banks(b_k, households, firm_cons, firm_cap, cb.CR_t)
+            else:
+                for dep in depositors:
+                    if dep//10000 == 0:
+                        payobs.deposit_interest(b_k, households[dep], cb)
+                    elif dep//10000 == 1:
+                        payobs.deposit_interest(b_k, firm_cons[dep], cb)
+                    elif dep//10000 == 2:
+                        payobs.deposit_interest(b_k, firm_cap[dep], cb)
+                    else:
+                        print("Not possible!")
+                        pass
+        # After bonds repayment slight decrease in bank NW's
         payobs.bond_payments_cb(cb, govt, banks)
+        # input("press:")
 
     def profits_taxes_dividends(self):
         households = self.households
@@ -468,6 +535,7 @@ class Economy:
             payobs.pay_taxes(bk, govt, None, cb)
             payobs.pay_dividends_b(bk, cb)
             div_T = div_T + bk.div
+        # After paying taxes and dividends banks NW decreases
 
         add_el = ut.add_element
         for h in households.values():
@@ -495,8 +563,26 @@ class Economy:
         camkt.cash_adv_interaction(self.banks, self.central_bank)
 
     def get_aggregate_tf_matrix(self, t):
-        agents_dict = self.get_agents_dict()
-        self.tf_matrix_agg = so_agg.get_tf_matrix(agents_dict, t)
+        for h in self.households.values():
+            self.tf_matrix_hh[:, h.id_h] = h.get_tf_matrix(t)
+        for f_c in self.firms_cons.values():
+            i = 2*f_c.id_fc
+            self.tf_matrix_fc[:, i] = f_c.get_tf_matrix(t)[:, 0]
+            self.tf_matrix_fc[:, i + 1] = f_c.get_tf_matrix(t)[:, 1]
+        for f_k in self.firms_cap.values():
+            i = 2*f_k.id_fk
+            self.tf_matrix_fk[:, i] = f_k.get_tf_matrix(t)[:, 0]
+            self.tf_matrix_fk[:, i + 1] = f_k.get_tf_matrix(t)[:, 1]
+        for bk in self.banks.values():
+            i = 2*bk.id_b
+            self.tf_matrix_b[:, i] = bk.get_tf_matrix(t)[:, 0]
+            self.tf_matrix_b[:, i + 1] = bk.get_tf_matrix(t)[:, 1]
+
+        self.tf_matrix_agg = so_agg.get_tf_matrix(self.tf_matrix_hh,
+                                                  self.tf_matrix_fc,
+                                                  self.tf_matrix_fk,
+                                                  self.tf_matrix_b,
+                                                  self.govt, self.central_bank, t)
         return self.tf_matrix_agg
 
     def calc_average_wage(self):
@@ -517,8 +603,8 @@ class Economy:
             i_l = i_l + bk.i_l
         self.central_bank.LR = lr/self.SIZE[3]
         self.central_bank.CR = cr/self.SIZE[3]
-        self.i_dbar = round(i_d/self.SIZE[3], 4)
-        self.i_lbar = round(i_l/self.SIZE[3], 4)
+        self.i_dbar = i_d/self.SIZE[3]
+        self.i_lbar = i_l/self.SIZE[3]
 
     def calc_statistics(self):
         # self.reset_govt_cb_variables()

@@ -28,7 +28,8 @@ class FirmCap:
         self.Y_D = FK[14]/size_fk
         self.Y_r = FK[14]/size_fk
         self.S = FK[14]/size_fk
-        self.inv = np.around(np.array([FK[13]/size_fk, FK[13]/size_fk]), 2)
+        self.inv = np.array([FK[13]/size_fk, FK[13]/size_fk])
+        self.nF = 0
         # Costs
         self.uc = np.array([FK[11], FK[11]])
         # Labor
@@ -38,8 +39,8 @@ class FirmCap:
         self.MU = FK[3]
         self.Pk = FK[12]
         # Credit
-        self.L_D = round(L[0], 2)
-        self.L_r = np.around(np.array([L[0]/(1 + MODEL[0])**i for i in range(eta)]), 2)
+        self.L_D = L[0]
+        self.L_r = np.array([L[0]/(1 + MODEL[0])**i for i in range(eta)])
         self.prev_L = 0
         self.i_l = np.array([INT[1]]*eta)
         # Finance
@@ -51,8 +52,8 @@ class FirmCap:
         self.mu_N = FK[10]
 
         # Balance sheet variables
-        self.D = round(D, 2)
-        self.L = np.around(np.array(L), 2)
+        self.D = D
+        self.L = np.array(L)
         self.K = FK[13]*FK[11]/size_fk
 
         # Transaction variables
@@ -126,11 +127,13 @@ class FirmCap:
         self.N_D = round(self.Y_D/self.mu_N)
 
     def calc_markup(self):
-        self.MU = ut.update_variable(self.MU, self.inv[0]/self.S <= self.nu)
+        if self.S > 0:
+            self.MU = ut.update_variable(self.MU, (self.inv[0]/self.S) <= self.nu)
 
     def set_price(self, exp_wbar):
         self.calc_markup()
-        self.Pk = round((1 + self.MU)*exp_wbar*self.N_D/self.Y_D, 4)
+        if self.Y_D > 0:
+            self.Pk = (1 + self.MU)*exp_wbar*self.N_D/self.Y_D
 
     def calc_credit_demand(self, exp_wbar):
         self.L_D = max(self.exp_div + exp_wbar*self.sigma*self.N_D - self.exp_OCF, 0)
@@ -144,6 +147,7 @@ class FirmCap:
         self.K = 0
 
         self.Y_n = 0
+        self.nF = 0
         self.W = 0
         self.CG_inv = 0
         self.T = 0
@@ -158,7 +162,7 @@ class FirmCap:
         self.Y_r = self.mu_N*len(self.id_workers)
         self.reset_variables()
         self.W = sum(self.w)
-        self.uc[0] = self.W/self.Y_r
+        self.uc[0] = self.W/self.Y_r if self.Y_r != 0 else 0
         self.S = 0
         self.inv[0], self.inv[1] = 0, self.inv[0]
 
@@ -168,5 +172,6 @@ class FirmCap:
         self.PI_CA = self.PI - self.T
         self.div = max(self.PI_CA*self.rho, 0)
         self.PI_KA = self.PI_CA - self.div
-        self.OCF = -np.sum(self.L)/self.eta + self.PI_CA - self.CG_inv
+        # self.OCF = self.Y_n + self.int_D - self.W - np.sum(self.L*self.i_l) - np.sum(self.L_r)/self.eta
+        self.OCF = -np.sum(self.L_r)/self.eta + self.PI_CA - self.CG_inv
         # self.r = self.OCF/self.prev_K
