@@ -22,7 +22,7 @@ start_time = time.time()
 os.chdir('/Users/riteshkakade/Desktop/AB-SFC/Baseline')
 
 MC = 1
-T = 5
+T = 25
 
 balance_sheet = np.zeros((8, 7, T + 1, MC))
 tf_matrix = np.zeros((18, 10, T + 1, MC))

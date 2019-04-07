@@ -33,8 +33,8 @@ def credit_interaction(firm_c, firm_k, bank):
         curr_CR = (b.get_net_worth() + b.del_L)/(b.L + b.del_L)
         # print("Entering credit mkt with", curr_CR, b.id)
         if curr_CR < 0.06:
-            bank_id = delete(bank_id, where(bank_id == b.id))
-            b.L_max = 0
+            # bank_id = delete(bank_id, where(bank_id == b.id))
+            b.L_max = b.prev_L/b.eta
 
     N = 0
 
@@ -44,7 +44,7 @@ def credit_interaction(firm_c, firm_k, bank):
         id_subset = unique(choose(id_firm, 12)) if len(id_firm) > 24 else id_firm
         for f in id_subset:
             f_obj = firm_c[f] if f//10000 == 1 else firm_k[f]
-            if f_obj.L_D > 0:
+            if round(f_obj.L_D) > 0:
                 chi = f_obj.chi_c
                 f_choice = unique(choose(bank_id, chi)) if len(bank_id) > chi else bank_id
                 i_list = array([bank[i].i_l for i in f_choice])
@@ -52,12 +52,16 @@ def credit_interaction(firm_c, firm_k, bank):
                 i_new = i_list[min_index]
                 old_id = f_obj.id_bank_l[0]
                 i_old = bank[old_id].i_l if (old_id != -1 and bank[old_id].L_max != 0) else 100
-                if i_new < i_old:
-                    p_s = getPs(f_obj.epsilon_c, i_old, i_new) if (old_id != -1 and bank[old_id].L_max != 0) else 1
+                b_new = bank[f_choice[min_index]]
+                if b_new.Ls < b_new.prev_L/b_new.eta:
+                    p_s = 1
                 else:
-                    p_s = 0
+                    if i_new < i_old:
+                        p_s = getPs(f_obj.epsilon_c, i_old, i_new) if (old_id != -1 and bank[old_id].L_max != 0) else 1
+                    else:
+                        p_s = 0
                 if binom(1, p_s) == 1:
-                    bid = loan_req(f_obj, bank[f_choice[min_index]], (f//10000 == 1))
+                    bid = loan_req(f_obj, b_new, (f//10000 == 1))
                 else:
                     bid = loan_req(f_obj, bank[old_id], (f//10000 == 1))
             else:

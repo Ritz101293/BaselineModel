@@ -137,10 +137,11 @@ class Bank:
         # self.del_B = 0
         # self.del_L = 0
 
-    def set_interest_rates(self, i_dbar, i_lbar, LR, CR):
+    def set_interest_rates(self, i_dbar, i_lbar, LR, CR, Lavg):
         self.LR = self.R/self.D
         self.CR = self.get_net_worth()/self.L
         nF = self.nF
+        Ls = self.Ls
         self.reset_variables()
         self.i_dprev = self.i_d
         self.i_d = ut.update_variable(i_dbar, self.LR > LR)

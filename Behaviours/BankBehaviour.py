@@ -19,7 +19,11 @@ i_k = 0.5
 
 
 def get_default_probability(OCF, ds, zeta):
-    p = (1/(1 + math.exp((OCF - zeta*ds)/ds))) if round(ds, 2) != 0 else 0
+    p = 0
+    if round(ds, 2) != 0:
+        E = (OCF - zeta*ds)/ds
+        if E < 50:
+            p = (1/(1 + math.exp(E)))
     # print("default prob", p)
     return p
 
@@ -37,6 +41,9 @@ def handle_loan_request(f_obj, b_obj, firm_c=0):
         disburse_loan(f_obj, b_obj, Ld, i_l) if Ld < Lm else disburse_loan(f_obj, b_obj, 0, i_l)
     else:
         Ld = get_max_credit_value(Ld, f_obj.OCF, i_l, zeta, delta, eta)
+        Lmax = max(f_obj.L_r)
+        if Ld >= 1.1*Lmax:
+            Ld = (0.9 + 0.2*np.random.random_sample())*Lmax
         if round(Ld) != 0:
             disburse_loan(f_obj, b_obj, Ld, i_l)
         else:

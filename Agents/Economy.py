@@ -51,6 +51,7 @@ class Economy:
         self.w_bar = parameters[4][2]
         self.i_lbar = parameters[1][1]
         self.i_dbar = parameters[1][0]
+        self.L_avg = 0
 
         self.lambda_e = parameters[4][5]
         self.nu_0 = 0
@@ -117,6 +118,7 @@ class Economy:
         Rb = abs(self.balance_sheet_agg[5][3]/size_b)
         LR0 = abs(self.balance_sheet_agg[5][3]/self.balance_sheet_agg[0][3])
         CR0 = abs(self.balance_sheet_agg[7][3]/self.balance_sheet_agg[1][3])
+        self.L_avg = Lb
 
         for i in range(size_h):
             household = hh(Dh, HH, C_r/size_h, Pc,
@@ -374,8 +376,9 @@ class Economy:
         LR = self.central_bank.LR
         CR = self.central_bank.CR
         CR_t = self.central_bank.CR_t
+        L_avg = self.L_avg
         for bk in self.banks.values():
-            bk.set_interest_rates(idb, ilb, LR, CR)
+            bk.set_interest_rates(idb, ilb, LR, CR, L_avg)
             # print(bk.get_capital_ratio(), "capital ratio of ", bk.id)
             # print("capital req", CR_t)
             # delNW = bk.exp_delL + bk.exp_delR + bk.exp_delB - bk.exp_delD - bk.exp_delA
@@ -595,16 +598,19 @@ class Economy:
         self.w_bar = round(w/c, 2)
 
     def calc_average_banking_variables(self):
-        cr, lr, i_d, i_l = 0, 0, 0, 0
+        cr, lr, i_d, i_l, L_avg = 0, 0, 0, 0, 0
+        size_b = self.SIZE[3]
         for bk in self.banks.values():
             cr = cr + bk.CR
             lr = lr + bk.LR
             i_d = i_d + bk.i_d
             i_l = i_l + bk.i_l
-        self.central_bank.LR = lr/self.SIZE[3]
-        self.central_bank.CR = cr/self.SIZE[3]
-        self.i_dbar = i_d/self.SIZE[3]
-        self.i_lbar = i_l/self.SIZE[3]
+            L_avg = L_avg + bk.Ls
+        self.central_bank.LR = lr/size_b
+        self.central_bank.CR = cr/size_b
+        self.i_dbar = i_d/size_b
+        self.i_lbar = i_l/size_b
+        self.L_avg = L_avg/size_b
 
     def calc_statistics(self):
         # self.reset_govt_cb_variables()

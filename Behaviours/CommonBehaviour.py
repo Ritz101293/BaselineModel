@@ -11,8 +11,12 @@ import math
 
 
 def get_switch_probability(eps, x_old, x_new):
-    del_x = (x_new - x_old)/x_new
-    return (1 - math.exp(eps*del_x))
+    if round(x_new, 15) != 0:
+        del_x = (x_new - x_old)/x_new
+        return (1 - math.exp(eps*del_x))
+    else:
+        return 1
+
 
 
 def deposit_transfer(sender, receiver, banks, amount):

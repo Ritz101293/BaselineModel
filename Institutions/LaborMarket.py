@@ -27,7 +27,7 @@ def labor_interaction(h_id, id_firm_c, id_firm_k, household, firm_c, firm_k, gov
     h_id = firmk_labor_interaction(firm_k, id_firm_k, household, h_id, choose, isin,
                                    array, argmin, add_el, delete, where, unique)
 
-    print_vacancies(firm_c)
+    # print_vacancies(firm_c)
     h_id = firmc_labor_interaction(firm_c, id_firm_c, household, h_id, choose, isin,
                                    array, argmin, add_el, delete, where, unique)
     return h_id
@@ -121,7 +121,7 @@ def firmc_labor_interaction(firm_c, id_firm_c, household, h_id, choose, isin,
             chi = fc_obj.chi_l
             vac = int(fc_obj.N_D) - len(fc_obj.id_workers)
             if vac > 0:
-                for v in range(vac + 1):
+                for v in range(int(2*vac)):
                     if len(h_id) != 0 and fn < vac:
                         h_choice = unique(choose(h_id, chi))
                         w_list = array([household[i].w_bar for i in h_choice])
@@ -143,7 +143,7 @@ def firmc_labor_interaction(firm_c, id_firm_c, household, h_id, choose, isin,
                 pass
                 # print("firm %d has no vacancies" % (fc))
     h_id = h_id[~isin(h_id, hired_h)]
-    print("Firm C hired %d labor" % (N))
+    # print("Firm C hired %d labor" % (N))
     return h_id
 
 
@@ -195,13 +195,14 @@ def firmk_labor_interaction(firm_k, id_firm_k, household, h_id, choose, isin,
     hired_h = []
     np.random.shuffle(id_firm_k)
     for fk in id_firm_k:
+        fn = 0
         if len(h_id) != 0:
             fk_obj = firm_k[fk]
             chi = fk_obj.chi_l
             vac = int(fk_obj.N_D) - len(fk_obj.id_workers)
             if vac > 0:
-                for v in range(vac):
-                    if len(h_id) != 0:
+                for v in range(2*vac):
+                    if len(h_id) != 0 and fn < vac:
                         h_choice = unique(choose(h_id, chi))
                         w_list = array([household[i].w_bar for i in h_choice])
                         min_index = argmin(w_list)
@@ -217,6 +218,7 @@ def firmk_labor_interaction(firm_k, id_firm_k, household, h_id, choose, isin,
                             # h_id = delete(h_id, where(h_id == hid))
                             hired_h.append(hid)
                             N = N + 1
+                            fn = fn + 1
                         # print("firm %d hires household %d" % (fk, hid))
             else:
                 pass

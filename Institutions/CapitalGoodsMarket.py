@@ -62,18 +62,10 @@ def select_supplier(firm_c, firm_k):
 
 def purchase_capital(firm_c, firm_k, banks):
     id_firm_c = np.array(list(firm_c.keys()))
-    id_firm_k = np.array(list(firm_k.keys()))
 
     print_k_goods_details(firm_c, firm_k)
-    delete = np.delete
-    where = np.where
-    unique = np.unique
-    choose = ut.draw_sample
-    argmin = np.argmin
-    array = np.array
 
     np.random.shuffle(id_firm_c)
-    done_fk = []
 
     for f_c in id_firm_c:
         f_obj = firm_c[f_c]
